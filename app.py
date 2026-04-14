@@ -16,7 +16,7 @@ with col_mkt:
 
 if market_select != "Massachusetts (Pilot)":
     st.info("🚧 **Market In Development:** Proprietary capacity and AHJ strictness data for this region is currently being sourced. Please return to the Massachusetts Pilot.")
-    st.stop() # Stops the rest of the app from loading until they go back to MA
+    st.stop() 
 
 # --- THE MA DATABASE ---
 ma_zip_db = {
@@ -95,7 +95,6 @@ if target_found:
     is_red = target["map"] == "Red"
     tu_prob = 0.90 if is_red else (0.50 if target["map"] == "Yellow" else 0.10)
     
-    # Softened Timeline Logic
     if is_red:
         timeline_status = "Extended (Complex Study Required)"
     elif target["map"] == "Yellow":
@@ -140,5 +139,6 @@ if target_found:
     else:
         st.success("✅ **CAPACITY OPEN:** System falls within Simplified thresholds. Feasibility is high for standard operational timelines.")
 
-    st.divider()
-    st.caption("🔧 **Pilot Program:** This tool is currently in Beta. Please provide feedback on AHJ strictness or utility behavior to improve diagnostic accuracy.")
+# --- THE COLLABORATION DISCLAIMER ---
+st.divider()
+st.warning("🚧 **Work in Progress (Pilot Program)**\n\nThis Grid Expectation Engine is currently an active pilot. The data powering these risk assessments is continually evolving. **Please feel free to make recommendations or provide direct feedback regarding utility behavior, AHJ strictness, or capacity accuracy.** Your frontline insights are essential to making this tool as protective and useful as possible.")
