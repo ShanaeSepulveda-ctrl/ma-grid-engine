@@ -5,7 +5,7 @@ from streamlit_folium import st_folium
 # --- DASHBOARD CONFIGURATION ---
 st.set_page_config(page_title="Grid Expectation Engine (Pilot)", page_icon="🦄", layout="wide")
 
-st.title("⚡ National Grid Resilience Engine")
+st.title("⚡ MA Grid Resilience Engine")
 st.markdown("Proactive capacity mapping, financial exposure tracking, and strategic expectation setting.")
 st.divider()
 
