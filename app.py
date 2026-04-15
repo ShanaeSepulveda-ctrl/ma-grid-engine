@@ -2,10 +2,10 @@ import streamlit as st
 import pandas as pd
 import folium
 from streamlit_folium import st_folium
-import math
+import numpy as np
 
 # --- DASHBOARD CONFIGURATION ---
-st.set_page_config(page_title="Executive Grid Engine 14.5", page_icon="🦄", layout="wide")
+st.set_page_config(page_title="Executive Grid Engine 14.6", page_icon="🦄", layout="wide")
 
 st.title("⚡ National Grid Resilience Engine (Executive Dashboard)")
 st.markdown("Dynamic capacity mapping and financial exposure tracking powered by live CRM data.")
@@ -27,7 +27,7 @@ def load_and_clean_data():
         df = df[df['City'].str.lower() != 'nan'] 
         df = df[df['City'] != ''] 
 
-        # 2. Clean the Financials
+        # 2. Clean the Financials (Preserves ALL your money!)
         if 'Total Cost' in df.columns:
             df['TU_Cost'] = df['Total Cost'].astype(str).replace(r'[\$,]', '', regex=True)
             df['TU_Cost'] = pd.to_numeric(df['TU_Cost'], errors='coerce').fillna(0)
@@ -42,7 +42,7 @@ def load_and_clean_data():
         else:
             df['System_Size'] = 0.0
 
-        # 5. PRECISION GEOCODING: The Mega MA Coordinate Database
+        # 3. PRECISION GEOCODING
         ma_coords = {
             "Abington": (42.104, -70.945), "Acton": (42.485, -71.432), "Agawam": (42.069, -72.615), "Amesbury": (42.858, -70.930),
             "Amherst": (42.380, -72.523), "Andover": (42.658, -71.136), "Arlington": (42.415, -71.156), "Attleboro": (41.944, -71.283),
@@ -67,17 +67,14 @@ def load_and_clean_data():
             "Worcester": (42.262, -71.802)
         }
         
-        # If city has coords, assign them. If not, set to None.
-        df['Lat'] = df['City'].apply(lambda c: ma_coords.get(c, None))
-        df['Lon'] = df['City'].apply(lambda c: ma_coords.get(c, None)[1] if ma_coords.get(c) else None)
+        # Safely map coordinates. If not found, assign None, but DO NOT drop the row!
+        df['Lat'] = df['City'].apply(lambda c: ma_coords[c][0] if c in ma_coords else None)
+        df['Lon'] = df['City'].apply(lambda c: ma_coords[c][1] if c in ma_coords else None)
         
-        # Track which cities are missing from our dictionary
+        # Keep track of unmapped cities for the audit block
         missing_cities = df[df['Lat'].isna()]['City'].unique().tolist()
         
-        # Drop rows without coordinates so the map draws cleanly without clumping
-        df_mapped = df.dropna(subset=['Lat', 'Lon'])
-        
-        return df_mapped, missing_cities
+        return df, missing_cities
 
     except FileNotFoundError:
         st.error("🚨 'ma_grid_data.csv' not found!")
@@ -88,16 +85,20 @@ grid_data, unmapped_cities = load_and_clean_data()
 
 # --- EXECUTIVE FINANCIAL KPI PANEL ---
 if not grid_data.empty:
+    # Calculations are now run on ALL data, protecting your $2.7M figure
     total_tu_invoiced = grid_data['TU_Cost'].sum()
-    avg_tu_cost = grid_data[grid_data['TU_Cost'] > 0]['TU_Cost'].mean() if not grid_data[grid_data['TU_Cost'] > 0].empty else 0
-    total_projects_flagged = len(grid_data[grid_data['TU_Cost'] > 0])
+    flagged_projects = grid_data[grid_data['TU_Cost'] > 0]
+    avg_tu_cost = flagged_projects['TU_Cost'].mean() if not flagged_projects.empty else 0
+    total_projects_flagged = len(flagged_projects)
     
-    st.error(f"🚨 **EXECUTIVE BRIEFING: Mapped Utility Upgrade Exposure: ${total_tu_invoiced:,.2f}**")
+    st.error(f"🚨 **EXECUTIVE BRIEFING: Verified Utility Upgrade Exposure: ${total_tu_invoiced:,.2f}**")
     
     col_kpi1, col_kpi2, col_kpi3 = st.columns(3)
-    col_kpi1.metric("Mapped High-Friction Projects", total_projects_flagged)
-    col_kpi2.metric("Average TU Invoice", f"${avg_tu_cost:,.2f}")
-    col_kpi3.metric("Highest Saturated Utility", grid_data['Utility Company'].mode()[0])
+    col_kpi1.metric("Total High-Friction Projects", total_projects_flagged)
+    col_kpi2.metric("Average TU Invoice (When Flagged)", f"${avg_tu_cost:,.2f}")
+    
+    highest_util = grid_data['Utility Company'].mode()[0] if not grid_data['Utility Company'].empty else "Unknown"
+    col_kpi3.metric("Highest Saturated Utility", highest_util)
     st.divider()
 
 # --- TARGET MARKET SELECTION ---
@@ -127,14 +128,14 @@ st.subheader("🗺️ Live Grid Saturation Map")
 st.caption("Visualizing utility infrastructure capacity based on verified pipeline data.")
 
 start_lat, start_lon, start_zoom = 42.25, -71.80, 8
-if target_found and not grid_data[grid_data['City'] == selected_city].empty:
-    target_row = grid_data[grid_data['City'] == selected_city].iloc[0]
-    start_lat, start_lon, start_zoom = target_row['Lat'], target_row['Lon'], 12
 
 ma_map = folium.Map(location=[start_lat, start_lon], zoom_start=start_zoom, tiles="CartoDB dark_matter")
 
 if not grid_data.empty:
-    city_summary = grid_data.groupby('City').agg({
+    # Safely drop missing coords ONLY for map drawing, preserving the main data
+    map_data = grid_data.dropna(subset=['Lat', 'Lon'])
+    
+    city_summary = map_data.groupby('City').agg({
         'TU_Cost': 'sum',
         'Utility Company': 'first',
         'System_Size': 'mean',
@@ -143,6 +144,7 @@ if not grid_data.empty:
     }).reset_index()
     
     for _, row in city_summary.iterrows():
+        # Heatmap logic
         if row['TU_Cost'] > 10000:
             risk_color = "#ff4b4b" 
         elif row['TU_Cost'] > 0:
@@ -161,8 +163,11 @@ if not grid_data.empty:
             weight=1
         ).add_to(ma_map)
 
+# Targeting Reticle
 if target_found:
-    folium.Circle(location=[start_lat, start_lon], radius=3000, color="white", weight=3, dash_array='5, 5', fill=False).add_to(ma_map)
+    target_row = grid_data[grid_data['City'] == selected_city].iloc[0]
+    if pd.notna(target_row['Lat']):
+        folium.Circle(location=[target_row['Lat'], target_row['Lon']], radius=3000, color="white", weight=3, dash_array='5, 5', fill=False).add_to(ma_map)
 
 st_folium(ma_map, width=1200, height=500, returned_objects=[])
 
@@ -174,11 +179,12 @@ if target_found:
     city_history = grid_data[grid_data['City'] == selected_city]
     historical_exposure = city_history['TU_Cost'].mean() if not city_history.empty else 0
     
+    # Exact Timeline Logic Updated
     if is_complex_review or historical_exposure > 5000:
         timeline_status = "4-8 Weeks (Transformer Review)"
         risk_level = "Red"
     elif historical_exposure > 0:
-        timeline_status = "2-4 Weeks (Moderate / Average)"
+        timeline_status = "2-4 Weeks (Moderate/Average)"
         risk_level = "Yellow"
     else:
         timeline_status = "1-2 Weeks (Simplified)"
@@ -197,7 +203,7 @@ if target_found:
     if risk_level == "Red":
         st.warning("⚠️ **CAPACITY WARNING:** The requested system size and location historically require an extended utility transformer review (4-8 weeks).")
     elif risk_level == "Yellow":
-        st.info("🔄 **MODERATE REVIEW:** Moderate timelines expected (2-4 weeks). Proceed with standard engineering review while monitoring utility study queues.")
+        st.info("🔄 **MODERATE REVIEW:** Moderate timelines expected (2-4 weeks). Proceed with standard engineering review.")
     else:
         st.success("✅ **CAPACITY OPEN:** System falls within Simplified thresholds. Expect rapid utility approval (1-2 weeks).")
 
@@ -207,5 +213,5 @@ st.divider()
 if len(unmapped_cities) > 0:
     with st.expander("⚠️ Data Audit: Unmapped Cities"):
         st.warning(f"**{len(unmapped_cities)} cities from your CSV are missing from the map database.**")
-        st.write("To keep the map perfectly accurate, we hid these cities because we don't have their exact coordinates yet. To fix this, ask your Data Strategy Lead (Shanae) to add these cities to the Python dictionary:")
+        st.write("Good news: These cities are **STILL included** in your total financial calculations at the top of the page! However, we hid them from the map to maintain geographic accuracy. To add them to the map, insert their coordinates into the Python code.")
         st.code(", ".join(unmapped_cities))
