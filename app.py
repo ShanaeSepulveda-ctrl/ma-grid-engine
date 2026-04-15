@@ -5,7 +5,7 @@ from streamlit_folium import st_folium
 import math
 
 # --- DASHBOARD CONFIGURATION ---
-st.set_page_config(page_title="Executive Grid Engine 14.3", page_icon="🦄", layout="wide")
+st.set_page_config(page_title="Executive Grid Engine 14.4", page_icon="🦄", layout="wide")
 
 st.title("⚡ National Grid Resilience Engine (Executive Dashboard)")
 st.markdown("Dynamic capacity mapping and financial exposure tracking powered by live CRM data.")
@@ -23,13 +23,12 @@ def load_and_clean_data():
             st.error("Missing 'City' column in CSV.")
             return pd.DataFrame()
         
-        # Drop empty rows and force to title case
         df = df.dropna(subset=['City'])
         df['City'] = df['City'].astype(str).str.title().str.strip()
-        df = df[df['City'].str.lower() != 'nan'] # Catch sneaky text 'nan'
-        df = df[df['City'] != ''] # Catch empty strings
+        df = df[df['City'].str.lower() != 'nan'] 
+        df = df[df['City'] != ''] 
 
-        # 2. Clean the Financials (Total Cost)
+        # 2. Clean the Financials
         if 'Total Cost' in df.columns:
             df['TU_Cost'] = df['Total Cost'].astype(str).replace(r'[\$,]', '', regex=True)
             df['TU_Cost'] = pd.to_numeric(df['TU_Cost'], errors='coerce').fillna(0)
@@ -47,20 +46,28 @@ def load_and_clean_data():
         else:
             df['System_Size'] = 0.0
 
-        # 5. Geocoding: Map Cities to Coordinates so Folium works
+        # 5. PRECISION GEOCODING: Master MA Coordinate Database
         ma_coords = {
-            "Springfield": (42.101, -72.589), "Ludlow": (42.160, -72.474), "Lynn": (42.466, -70.949),
-            "Amherst": (42.380, -72.523), "Boston": (42.360, -71.058), "Worcester": (42.262, -71.802),
-            "Westfield": (42.120, -72.749), "Fitchburg": (42.583, -71.802), "Brockton": (42.083, -71.018),
-            "Acton": (42.485, -71.432), "Pittsfield": (42.450, -73.245), "Fall River": (41.701, -71.155),
-            "New Bedford": (41.636, -70.934), "Northampton": (42.325, -72.641)
+            "Bellingham": (42.083, -71.475), "Springfield": (42.101, -72.589), "Ludlow": (42.160, -72.474), 
+            "Lynn": (42.466, -70.949), "Amherst": (42.380, -72.523), "Boston": (42.360, -71.058), 
+            "Worcester": (42.262, -71.802), "Westfield": (42.120, -72.749), "Fitchburg": (42.583, -71.802), 
+            "Brockton": (42.083, -71.018), "Acton": (42.485, -71.432), "Pittsfield": (42.450, -73.245), 
+            "Fall River": (41.701, -71.155), "New Bedford": (41.636, -70.934), "Northampton": (42.325, -72.641),
+            "Cambridge": (42.373, -71.109), "Lowell": (42.633, -71.316), "Quincy": (42.252, -71.002),
+            "Newton": (42.337, -71.209), "Framingham": (42.279, -71.416), "Haverhill": (42.776, -71.077),
+            "Taunton": (41.900, -71.089), "Weymouth": (42.218, -70.940), "Peabody": (42.527, -70.928),
+            "Billerica": (42.558, -71.268), "Marlborough": (42.345, -71.552), "Woburn": (42.479, -71.152),
+            "Shrewsbury": (42.295, -71.712), "Dartmouth": (41.626, -70.984), "Chelmsford": (42.599, -71.367),
+            "Andover": (42.658, -71.136), "Natick": (42.283, -71.349), "Randolph": (42.162, -71.041),
+            "Franklin": (42.083, -71.396), "Lexington": (42.447, -71.227), "Needham": (42.280, -71.235),
+            "Norwood": (42.194, -71.199), "Wellesley": (42.296, -71.292), "Milford": (42.141, -71.516)
         }
         
-        # Mathematical fallback for unknown cities to keep them inside MA
+        # Centralized fallback for completely unknown towns (places them in central MA instead of corners)
         def get_lat(city):
-            return ma_coords.get(city, 42.0 + (hash(city) % 100) / 100.0 * 0.7)
+            return ma_coords.get(city, 42.25 + (hash(str(city)) % 100) / 1000.0)
         def get_lon(city):
-            return ma_coords.get(city, -73.0 + (hash(city + "lon") % 100) / 100.0 * 2.0)
+            return ma_coords.get(city, -71.80 + (hash(str(city) + "lon") % 100) / 1000.0)
             
         df['Lat'] = df['City'].apply(get_lat)
         df['Lon'] = df['City'].apply(get_lon)
@@ -95,7 +102,7 @@ col1, col2 = st.columns([1, 2])
 # Dynamically populate the dropdown safely
 available_cities = ["Statewide Overview"]
 if not grid_data.empty:
-    unique_cities = sorted(grid_data['City'].unique().tolist())
+    unique_cities = sorted([str(city) for city in grid_data['City'].unique() if str(city).lower() != 'nan'])
     available_cities += unique_cities
 
 with col1:
@@ -123,7 +130,6 @@ if target_found and not grid_data[grid_data['City'] == selected_city].empty:
 ma_map = folium.Map(location=[start_lat, start_lon], zoom_start=start_zoom, tiles="CartoDB dark_matter")
 
 if not grid_data.empty:
-    # Aggregate data by City for map plotting
     city_summary = grid_data.groupby('City').agg({
         'TU_Cost': 'sum',
         'Utility Company': 'first',
@@ -133,22 +139,20 @@ if not grid_data.empty:
     }).reset_index()
     
     for _, row in city_summary.iterrows():
-        # Map Failsafe: Ensure coordinates are valid floats before drawing
         try:
             lat = float(row['Lat'])
             lon = float(row['Lon'])
             if math.isnan(lat) or math.isnan(lon):
-                continue # Skip bad data safely
+                continue
         except:
             continue
             
-        # Heatmap logic
         if row['TU_Cost'] > 10000:
-            risk_color = "#ff4b4b" # Red
+            risk_color = "#ff4b4b" 
         elif row['TU_Cost'] > 0:
-            risk_color = "#ffc107" # Yellow
+            risk_color = "#ffc107" 
         else:
-            risk_color = "#00cc66" # Green
+            risk_color = "#00cc66" 
             
         folium.CircleMarker(
             location=[lat, lon],
@@ -161,7 +165,6 @@ if not grid_data.empty:
             weight=1
         ).add_to(ma_map)
 
-# Targeting Reticle
 if target_found:
     folium.Circle(location=[start_lat, start_lon], radius=3000, color="white", weight=3, dash_array='5, 5', fill=False).add_to(ma_map)
 
@@ -175,7 +178,6 @@ if target_found:
     city_history = grid_data[grid_data['City'] == selected_city]
     historical_exposure = city_history['TU_Cost'].mean() if not city_history.empty else 0
     
-    # Timeline Logic
     if is_complex_review or historical_exposure > 5000:
         timeline_status = "4-8 Weeks (Transformer Review)"
         risk_level = "Red"
@@ -194,7 +196,6 @@ if target_found:
     col_b.metric("Installation Approval Timeline", timeline_status)
     col_c.metric("Est. Sunk Cost Risk", f"${historical_exposure + 2000:,.0f}" if historical_exposure > 0 else "$2,000", "High Risk" if risk_level == "Red" else "Acceptable", delta_color="inverse")
 
-    # --- EXPECTATION SETTING & PATHWAYS ---
     st.subheader("3. Interconnection Feasibility & Pathway Review")
 
     if risk_level == "Red":
