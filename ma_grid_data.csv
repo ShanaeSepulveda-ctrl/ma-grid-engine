@@ -1,0 +1,417 @@
+City,Utility Company,Total Cost,System Size DC,Project: Project Name,Project: Service Contract: Service Contract Event: Job Code,Gross Price of Sunrun Managed Electrical,Install Branch: Region,Install Branch: Account Name,Type
+Turners Falls,WMECO,"$3,704.80",18.86,PR-3004803649,221R-003SANK2,"$5,204.80",Texachussets,Massachusetts,Electrical
+FEEDING HILLS,WMECO,"$8,055.45",18.86,PR-3004632608,221R-005FERR2,"$8,055.45",Texachussets,Massachusetts,Electrical
+PITTSFIELD,WMECO,"$2,413.86",6.15,PR-3004346376,221R-005MASO2,"$2,413.86",Texachussets,Massachusetts,Electrical
+SPRINGFIELD,WMECO,$810.86,9.43,PR-3004773020,221R-005ROBE2,$810.86,Texachussets,Massachusetts,Electrical
+PITTSFIELD,WMECO,"$4,188.61",6.97,PR-3004087540,221R-005WEEK,"$5,188.61",Texachussets,Massachusetts,Electrical
+SOUTHWICK,WMECO,"$3,911.60",14.76,PR-3004881719,221R-012BOYD,"$5,411.60",Texachussets,Massachusetts,Electrical
+EASTHAMPTON,WMECO,"$2,078.89",2.87,PR-3004173495,221R-014MYRI,"$2,078.89",Texachussets,Massachusetts,Electrical
+Agawam,WMECO,"$10,601.24",9.43,PR-3004705697,221R-015OFLU,"$10,601.24",Texachussets,Massachusetts,Electrical
+Springfield,WMECO,"$7,986.35",11.89,PR-3004770783,221R-017MCCR,"$7,986.35",Texachussets,Massachusetts,Electrical
+LUDLOW,WMECO,"$6,609.85",8.2,PR-3004819352,221R-018RINA,"$6,609.85",Texachussets,Massachusetts,Electrical
+GREENFIELD,WMECO,"$3,746.30",8.91,PR-3004556516,221R-019MADO2,"$3,746.30",Texachussets,Massachusetts,Electrical
+Pittsfield,WMECO,"$3,799.20",5.74,PR-3004869386,221R-019SANG,"$3,799.20",Texachussets,Massachusetts,Electrical
+SOUTHAMPTON,WMECO,"$1,519.29",12.3,PR-3004689098,221R-019TARK,"$1,519.29",Texachussets,Massachusetts,Electrical
+HADLEY,WMECO,"$7,357.40",4.05,PR-3004565263,221R-020WAYN,"$7,357.40",Texachussets,Massachusetts,Electrical
+LANESBOROUGH,WMECO,"$2,743.65",4.86,PR-3004320153,221R-021GERO,"$2,743.65",Texachussets,Massachusetts,Electrical
+PITTSFIELD,WMECO,"$3,123.12",2.05,PR-3004405565,221R-026PIEG,"$3,123.12",Texachussets,Massachusetts,Electrical
+Ludlow,WMECO,"$16,826.95",20.91,PR-3004705709,221R-028OFLU,"$28,226.95",Texachussets,Massachusetts,Electrical
+PITTSFIELD,WMECO,"$2,812.46",4.92,PR-3004046309,221R-033ELSE,"$2,812.46",Texachussets,Massachusetts,Electrical
+Ludlow,WMECO,"$13,845.54",7.38,PR-3004818657,221R-033PONU,"$13,845.54",Texachussets,Massachusetts,Electrical
+HADLEY,WMECO,"$2,649.03",9.84,PR-3004635248,221R-035CYCZ,"$2,649.03",Texachussets,Massachusetts,Electrical
+SPRINGFIELD,WMECO,"$7,620.08",6.15,PR-3003886173,221R-035MCCA,"$7,620.08",Texachussets,Massachusetts,Electrical
+Ludlow,WMECO,"$7,477.91",15.17,PR-3004870726,221R-041KLAS,"$7,477.91",Texachussets,Massachusetts,Electrical
+SPRINGFIELD,WMECO,"$8,649.69",8.61,PR-3005012682,221R-045RODR2,"$8,649.69",Texachussets,Massachusetts,Electrical
+SPRINGFIELD,WMECO,"$12,746.26",6.97,PR-3004909037,221R-048TODD,"$14,946.26",Texachussets,Massachusetts,Electrical
+Hadley,WMECO,"$3,942.85",11.48,PR-3004752832,221R-049DEVI,"$3,942.85",Texachussets,Massachusetts,Electrical
+Montgomery,WMECO,"$1,925.08",3.24,PR-3004198708,221R-049MORT,"$1,925.08",Texachussets,Massachusetts,Electrical
+LEE,WMECO,"$4,411.13",4.92,PR-3004854143,221R-050BLAC,"$4,411.13",Texachussets,Massachusetts,Electrical
+LANESBOROUGH,WMECO,"$3,553.96",3.69,PR-3004263240,221R-052DAVI,"$3,553.96",Texachussets,Massachusetts,Electrical
+PITTSFIELD,WMECO,$500.00,27.06,PR-3004776666,221R-052MARK,"$8,575.00",Texachussets,Massachusetts,Electrical
+Ludlow,WMECO,"$10,851.24",6.56,PR-3004858960,221R-061DENG,"$10,851.24",Texachussets,Massachusetts,Electrical
+Deerfield,WMECO,"$3,941.04",15.99,PR-3004835195,221R-062LUND,"$3,941.04",Texachussets,Massachusetts,Electrical
+SPRINGFIELD,WMECO,"$7,292.36",9.315,PR-3004493306,221R-063SANT2,"$7,292.36",Texachussets,Massachusetts,Electrical
+SPRINGFIELD,WMECO,"$8,571.15",4.86,PR-3004268907,221R-064NGUY,"$9,271.15",Texachussets,Massachusetts,Electrical
+PITTSFIELD,WMECO,"$3,503.05",10.25,PR-3004076527,221R-072RAMO3,"$3,503.05",Texachussets,Massachusetts,Electrical
+SPRINGFIELD,WMECO,"$11,430.91",7.38,PR-3003875744,221R-073CARI,"$12,930.91",Texachussets,Massachusetts,Electrical
+Springfield,WMECO,"$6,852.88",12.3,PR-3004692710,221R-073CARI2,"$8,352.88",Texachussets,Massachusetts,Electrical
+DALTON,WMECO,"$3,831.43",2.05,PR-3004057506,221R-091CARM,"$3,831.43",Texachussets,Massachusetts,Electrical
+PITTSFIELD,WMECO,"$1,292.50",3.69,PR-3004493149,221R-098DOUC,"$1,292.50",Texachussets,Massachusetts,Electrical
+SOUTHAMPTON,WMECO,"$2,441.06",3.645,PR-3003785250,221R-101TILB,"$2,441.06",Texachussets,Massachusetts,Electrical
+SPRINGFIELD,WMECO,"$8,768.00",8.2,PR-3003990125,221R-106LUNA,"$12,268.00",Texachussets,Massachusetts,Electrical
+PITTSFIELD,WMECO,"$3,892.38",18.225,PR-3004562584,221R-106WOLF,"$3,892.38",Texachussets,Massachusetts,Electrical
+AMHERST,WMECO,"$3,870.10",5.33,PR-3004540025,221R-107MOUS,"$9,870.10",Texachussets,Massachusetts,Electrical
+South Deerfield,WMECO,"$3,564.05",12.71,PR-3004733027,221R-108PITT,"$3,564.05",Texachussets,Massachusetts,Electrical
+PITTSFIELD,WMECO,"$8,795.77",6.97,PR-3004081070,221R-109WOJN,"$10,995.77",Texachussets,Massachusetts,Electrical
+Springfield,WMECO,"$6,389.40",10.25,PR-3003699285,221R-10PROBI,"$7,889.40",Texachussets,Massachusetts,Electrical
+GREENFIELD,WMECO,"$20,848.20",9.43,PR-3003694955,221R-111MADI,"$20,848.20",Texachussets,Massachusetts,Electrical
+HINSDALE,WMECO,"$2,855.90",15.99,PR-3004174227,221R-119BOUR,"$2,855.90",Texachussets,Massachusetts,Electrical
+Ludlow,WMECO,"$6,430.43",6.15,PR-3004877619,221R-126BOAC,"$6,430.43",Texachussets,Massachusetts,Electrical
+SPRINGFIELD,WMECO,"$5,674.28",8.1,PR-3004047517,221R-126GAJD,"$5,674.28",Texachussets,Massachusetts,Electrical
+LUDLOW,WMECO,"$4,853.07",12.3,PR-3004150182,221R-126PIAO,"$4,853.07",Texachussets,Massachusetts,Electrical
+EASTHAMPTON,WMECO,"$2,318.80",9.02,PR-3003849892,221R-132CLOU,"$2,318.80",Texachussets,Massachusetts,Electrical
+SOUTHWICK,WMECO,"$6,105.31",11.07,PR-3004868977,221R-136WILL2,"$6,105.31",Texachussets,Massachusetts,Electrical
+Whately,WMECO,"$4,772.36",8.2,PR-3004931472,221R-156FLYN,"$4,772.36",Texachussets,Massachusetts,Electrical
+Ludlow,WMECO,"$11,771.19",8.1,PR-3004337367,221R-173ALME,"$11,771.19",Texachussets,Massachusetts,Electrical
+LUDLOW,WMECO,"$10,350.22",13.77,PR-3004301240,221R-178HUME,"$10,350.22",Texachussets,Massachusetts,Electrical
+Springfield,WMECO,"$10,726.08",7.79,PR-3004156934,221R-232NGUY,"$12,226.08",Texachussets,Massachusetts,Electrical
+LUDLOW,WMECO,"$7,898.13",9.84,PR-3004616016,221R-233YEBO,"$7,898.13",Texachussets,Massachusetts,Electrical
+MONTGOMERY,WMECO,"$9,044.00",5.33,PR-3004198504,221R-254WHIT,"$9,044.00",Texachussets,Massachusetts,Electrical
+LEE,WMECO,"$4,290.65",12.555,PR-3004420758,221R-255ECKE,"$4,290.65",Texachussets,Massachusetts,Electrical
+Greenfield,WMECO,"$3,390.09",9.84,PR-3003673739,221R-33SJOHN,"$3,390.09",Texachussets,Massachusetts,Electrical
+SPRINGFIELD,WMECO,"$5,010.32",7.38,PR-3003732933,221R-34KMALD,"$6,510.32",Texachussets,Massachusetts,Electrical
+PITTSFIELD,WMECO,"$4,410.98",2.46,PR-3004145712,221R-350DECE,"$4,410.98",Texachussets,Massachusetts,Electrical
+SPRINGFIELD,WMECO,"$9,550.16",7.38,PR-3004590119,221R-371RIVE,"$9,550.16",Texachussets,Massachusetts,Electrical
+SPRINGFIELD,WMECO,"$7,333.47",9.02,PR-3004770693,221R-432SAIL,"$12,608.47",Texachussets,Massachusetts,Electrical
+Becket,WMECO,"$7,824.69",11.48,PR-3004686164,221R-448CARL,"$9,324.69",Texachussets,Massachusetts,Electrical
+Pittsfield,WMECO,"$5,802.12",4.455,PR-3004553526,221R-483LYON,"$5,802.12",Texachussets,Massachusetts,Electrical
+Erving,WMECO,"$2,742.92",8.2,PR-3003992609,221R-50BWILC,"$2,742.92",Texachussets,Massachusetts,Electrical
+Amherst,WMECO,"$3,440.87",12.71,PR-3004716752,221R-619LORE,"$4,940.87",Texachussets,Massachusetts,Electrical
+WEST SPRINGFIELD,WMECO,"$4,870.95",10.66,PR-3004516245,221R-683DURM,"$4,870.95",Texachussets,Massachusetts,Electrical
+LONGMEADOW,WMECO,"$3,826.12",4.51,PR-3003729471,221R-6BLROYC,"$3,826.12",Texachussets,Massachusetts,Electrical
+PITTSFIELD,WMECO,"$1,570.62",6.56,PR-3003831630,221R-78PHARR,"$1,570.62",Texachussets,Massachusetts,Electrical
+Lanesborough,WMECO,"$6,223.06",16.4,PR-3004831840,221R-814KETZ,"$6,223.06",Texachussets,Massachusetts,Electrical
+GREENFIELD,WMECO,"$4,702.57",11.89,PR-3003654352,221R-98BROBE,"$6,202.57",Texachussets,Massachusetts,Electrical
+Fitchburg,UNITIL,"$7,433.38",6,PR-3002249464,221R-013DOCE,"$7,433.38",Texachussets,Massachusetts,Electrical
+Fitchburg,UNITIL,"$1,559.15",7.2,PR-3002555885,221R-009LAPO,"$1,559.15",Texachussets,Massachusetts,Electrical
+Fitchburg,UNITIL,"$1,404.78",6,PR-3002034409,221R-675KELL,"$1,404.78",Texachussets,Massachusetts,Electrical
+Fitchburg,UNITIL,"$10,542.53",9.2,PR-3002062945,221R-039CRES,"$10,542.53",Texachussets,Massachusetts,Electrical
+Lunenburg,UNITIL,"$1,054.04",4.8,PR-3001832781,221R-091FLEM,$0.00,Texachussets,Massachusetts,Electrical
+Lunenburg,UNITIL,"$1,054.04",11.34,PR-3001864000,221R-154MCK1,"$4,854.04",Texachussets,Massachusetts,Electrical
+Townsend,UNITIL,"$14,635.99",10.25,PR-3003282140,221R-003FLAN,"$14,635.99",Texachussets,Massachusetts,Electrical
+Fitchburg,UNITIL,"$1,527.23",2.87,PR-3002895284,221R-005SOTO,"$1,527.23",Texachussets,Massachusetts,Electrical
+Lunenburg,UNITIL,"$1,527.23",14.35,PR-3003052344,221R-007MOFF,"$1,527.23",Texachussets,Massachusetts,Electrical
+Fitchburg,UNITIL,"$6,770.99",10.25,PR-3002814024,221R-008MCKO,"$6,770.99",Texachussets,Massachusetts,Electrical
+West Townsend,UNITIL,"$1,527.23",9.02,PR-3003179709,221R-008ROB1,"$1,527.23",Texachussets,Massachusetts,Electrical
+Fitchburg,UNITIL,"$8,240.30",4.1,PR-3003411230,221R-017ANU1,"$8,240.30",Texachussets,Massachusetts,Electrical
+Townsend,UNITIL,"$1,527.23",7.38,PR-3003343163,221R-020ESTA,"$1,527.23",Texachussets,Massachusetts,Electrical
+Fitchburg,UNITIL,"$7,995.54",14.76,PR-3002865778,221R-031LIL1,"$7,995.54",Texachussets,Massachusetts,Electrical
+West Townsend,UNITIL,"$6,626.41",5.74,PR-3003036966,221R-040AMME,"$8,126.41",Texachussets,Massachusetts,Electrical
+Fitchburg,UNITIL,"$1,527.23",3.28,PR-3003234633,221R-044ROJ1,"$1,527.23",Texachussets,Massachusetts,Electrical
+Fitchburg,UNITIL,"$6,136.67",3.28,PR-3003235468,221R-052KIWE,"$6,136.67",Texachussets,Massachusetts,Electrical
+Fitchburg,UNITIL,"$7,646.65",4.8,PR-3002245275,221R-090STRA,"$9,046.65",Texachussets,Massachusetts,Electrical
+Fitchburg,UNITIL,"$1,527.23",7.38,PR-3003160618,221R-095ALLA,"$1,527.23",Texachussets,Massachusetts,Electrical
+West Townsend,UNITIL,"$1,125.64",5.6,PR-3002213736,221R-110CHIL,"$1,125.64",Texachussets,Massachusetts,Electrical
+Fitchburg,UNITIL,"$1,125.64",11.2,PR-3002482655,221R-111CROW,"$3,725.64",Texachussets,Massachusetts,Electrical
+Fitchburg,UNITIL,"$1,125.64",8.8,PR-3002584972,221R-197ARSE,"$1,125.64",Texachussets,Massachusetts,Electrical
+Fitchburg,UNITIL,"$1,125.64",9.02,PR-3002910276,221R-261MADR,"$1,125.64",Texachussets,Massachusetts,Electrical
+Ashby,UNITIL,"$1,125.64",7.38,PR-3003017587,221R-338SPAR,"$1,125.64",Texachussets,Massachusetts,Electrical
+Fitchburg,UNITIL,"$1,527.23",4.92,PR-3003053830,221R-345MARK,"$1,527.23",Texachussets,Massachusetts,Electrical
+Fitchburg,UNITIL,"$7,149.00",14.76,PR-3002875267,221R-513JIME,"$16,149.00",Texachussets,Massachusetts,Electrical
+Fitchburg,UNITIL,"$1,527.23",3.6,PR-3002779946,221R-522ACO2,"$1,527.23",Texachussets,Massachusetts,Electrical
+Ashby,UNITIL,"$1,125.64",9.84,PR-3002913057,221R-801BARR,"$3,325.64",Texachussets,Massachusetts,Electrical
+Ashby,UNITIL,"$1,125.64",5.33,PR-3003473561,221R-910VELE,"$1,125.64",Texachussets,Massachusetts,Electrical
+FITCHBURG,UNITIL,"$6,679.49",6.48,PR-3004528145,221R-005TRAN2,"$7,479.49",Texachussets,Massachusetts,Electrical
+West Townsend,UNITIL,"$4,745.68",18.04,PR-3002692883,221R-030BLAC,"$4,745.68",Texachussets,Massachusetts,Electrical
+FITCHBURG,UNITIL,"$6,925.57",7.65,PR-3004798080,221R-031GARC2,"$6,925.57",Texachussets,Massachusetts,Electrical
+FITCHBURG,UNITIL,"$13,087.34",10.935,PR-3004395543,221R-056CIPR2,"$14,587.34",Texachussets,Massachusetts,Electrical
+FITCHBURG,UNITIL,"$17,095.28",6.97,PR-3004638692,221R-057RAHA,"$17,095.28",Texachussets,Massachusetts,Electrical
+FITCHBURG,UNITIL,"$12,843.04",13.53,PR-3004215104,221R-064ALDA2,"$12,843.04",Texachussets,Massachusetts,Electrical
+FITCHBURG,UNITIL,"$21,352.53",5.74,PR-3004216457,221R-067MOTT,"$23,152.53",Texachussets,Massachusetts,Electrical
+LUNENBURG,UNITIL,"$11,624.59",24.6,PR-3004148135,221R-082RICE,"$11,624.59",Texachussets,Massachusetts,Electrical
+FITCHBURG,UNITIL,"$6,124.49",8.505,PR-3003920864,221R-092ARSE,"$7,624.49",Texachussets,Massachusetts,Electrical
+FITCHBURG,UNITIL,"$14,608.21",5.67,PR-3004596540,221R-099PERE2,"$14,608.21",Texachussets,Massachusetts,Electrical
+Fitchburg,UNITIL,"$23,000.00",21.15,PR-3004932828,221R-103FLOR,"$23,000.00",Texachussets,Massachusetts,Electrical
+Fitchburg,UNITIL,"$6,124.49",13.94,PR-3003893053,221R-109COND,"$6,124.49",Texachussets,Massachusetts,Electrical
+FITCHBURG,UNITIL,"$10,857.64",9.84,PR-3004382717,221R-111THIB,"$10,857.64",Texachussets,Massachusetts,Electrical
+ASHBY,UNITIL,"$1,125.64",9.84,PR-3003615446,221R-114ANDE,"$1,125.64",Texachussets,Massachusetts,Electrical
+TOWNSEND,UNITIL,"$6,679.49",6.97,PR-3004602534,221R-134MURR,"$6,679.49",Texachussets,Massachusetts,Electrical
+FITCHBURG,UNITIL,"$13,110.00",14.76,PR-3004632254,221R-168LEON,"$15,310.00",Texachussets,Massachusetts,Electrical
+FITCHBURG,UNITIL,"$5,651.99",6.97,PR-3003791689,221R-17ISINU,"$5,651.99",Texachussets,Massachusetts,Electrical
+Fitchburg,UNITIL,"$8,165.25",6.56,PR-3003557642,221R-181TEIX,"$8,165.25",Texachussets,Massachusetts,Electrical
+ASHBY,UNITIL,"$6,925.57",14.58,PR-3004445633,221R-187WOOD,"$6,925.57",Texachussets,Massachusetts,Electrical
+LUNENBURG,UNITIL,"$6,429.33",15.99,PR-3003943805,221R-194TRUD,"$6,429.33",Texachussets,Massachusetts,Electrical
+FITCHBURG,UNITIL,"$16,919.79",10.25,PR-3004384029,221R-284PICA,"$16,919.79",Texachussets,Massachusetts,Electrical
+LUNENBURG,UNITIL,"$4,996.29",12.3,PR-3003798220,221R-315JANC,"$4,996.29",Texachussets,Massachusetts,Electrical
+LUNENBURG,UNITIL,"$10,618.01",9.84,PR-3004571290,221R-316JOYC,"$10,618.01",Texachussets,Massachusetts,Electrical
+FITCHBURG,UNITIL,"$1,125.64",4.92,PR-3003686162,221R-318DEFE,"$1,125.64",Texachussets,Massachusetts,Electrical
+Fitchburg,UNITIL,"$1,125.64",5.33,PR-3003578576,221R-33CDE C,"$1,125.64",Texachussets,Massachusetts,Electrical
+FITCHBURG,UNITIL,"$11,512.87",7.695,PR-3004486394,221R-435BIAN,"$11,512.87",Texachussets,Massachusetts,Electrical
+Fitchburg,UNITIL,"$6,228.25",9.84,PR-3004644346,221R-461SOIN,"$6,228.25",Texachussets,Massachusetts,Electrical
+FITCHBURG,UNITIL,"$8,010.39",3.28,PR-3003678240,221R-465LANN,"$8,010.39",Texachussets,Massachusetts,Electrical
+Ashby,UNITIL,"$6,515.44",9.02,PR-3004721366,221R-751ROBE,"$8,715.44",Texachussets,Massachusetts,Electrical
+FITCHBURG,UNITIL,"$1,125.63",10.8,PR-3003524476,221R-77SCLIF,"$5,125.63",Texachussets,Massachusetts,Electrical
+FITCHBURG,UNITIL,$0.00,3.69,PR-3004071147,221R-026REST,$0.00,Texachussets,Massachusetts,Electrical
+FITCHBURG,UNITIL,"$13,452.10",11.07,PR-3003745661,221R-78TBURG,$0.00,Texachussets,Massachusetts,Electrical
+EMMAUS,PPL,$0.00,23.76,PR-1666625317,241R-458BART,$0.00,Atlantic Coast,PA Pennsylvania East,Electrical
+Worcester,National Grid,"$2,500.00",9.72,PR-3001788972,221R-014FOS3,"$2,500.00",Texachussets,Massachusetts,Electrical
+Millbury,National Grid,$0.00,9.2,PR-3002135304,221R-016MORI,$0.00,Texachussets,Massachusetts,Electrical
+Clinton,National Grid,"$6,881.19",11.2,PR-3002131365,221R-040SANC,"$6,881.19",Texachussets,Massachusetts,Electrical
+Gardner,National Grid,"$1,919.43",11.2,PR-3002462834,221R-048CLOW,"$1,919.43",Texachussets,Massachusetts,Electrical
+Dudley,National Grid,"$1,919.43",3.2,PR-3002435089,221R-146FAR1,"$1,919.43",Texachussets,Massachusetts,Electrical
+Rutland,National Grid,"$1,972.04",10.53,PR-3001722381,221R-248PET1,"$1,972.04",Texachussets,Massachusetts,Electrical
+Uxbridge,National Grid,"$2,038.32",4.4,PR-3002510488,221R-338GALA,"$2,038.32",Texachussets,Massachusetts,Electrical
+Rockport,National Grid,"$1,919.43",5.6,PR-3002425613,222R-030BUR1,"$1,919.43",Texachussets,MA Wilmington,Electrical
+Haverhill,National Grid,"$1,972.04",4.4,PR-3002057283,222R-089NJER,"$1,972.04",Texachussets,MA Wilmington,Electrical
+Brockton,National Grid,"$7,423.83",4.4,PR-3002472092,223R-032HEAD,"$7,423.83",Texachussets,MA-223 Massachusetts East,Electrical
+Brockton,National Grid,"$7,102.70",12.4,PR-3002234534,223R-041AMBR,"$9,902.70",Texachussets,MA-223 Massachusetts East,Electrical
+Brockton,National Grid,"$6,881.19",14.8,PR-3002248884,223R-056AND1,"$6,881.19",Texachussets,MA-223 Massachusetts East,Electrical
+Fall River,National Grid,$0.00,8.61,PR-3002809430,223R-068LAFL,$0.00,Texachussets,MA-223 Massachusetts East,Electrical
+Randolph,National Grid,"$6,881.19",6.8,PR-3002264131,223R-312BAID,"$8,381.19",Texachussets,MA-223 Massachusetts East,Electrical
+Worcester,National Grid,$0.00,9.72,PR-3001788972,221R-014FOS3,"$2,500.00",Texachussets,Massachusetts,Electrical
+Worcester,National Grid,"$1,000.00",5.6,PR-3002332476,221R-005LEE3,"$1,000.00",Texachussets,Massachusetts,Electrical
+Wrentham,National Grid,"$1,919.43",14.4,PR-3002430637,221R-375STRU,"$1,919.43",Texachussets,Massachusetts,Electrical
+Lawrence,National Grid,"$8,161.51",5.6,PR-3002489071,222R-084GARC,"$8,161.51",Texachussets,MA Wilmington,Electrical
+Brockton,National Grid,"$7,102.70",6.075,PR-3001841925,223R-037GOME,"$16,802.70",Texachussets,MA-223 Massachusetts East,Electrical
+North Andover,National Grid,"$1,972.04",8.91,PR-3001966813,222R-250MONR,"$1,972.04",Texachussets,MA Wilmington,Electrical
+Brockton,National Grid,"$7,102.70",11.6,PR-3002275292,223R-136LALL,"$7,102.70",Texachussets,MA-223 Massachusetts East,Electrical
+Milford,National Grid,$0.00,13.77,PR-3001852970,221R-001PATE,$0.00,Texachussets,Massachusetts,Electrical
+Worcester,National Grid,"$6,881.19",4,PR-3002180457,221R-002LEON,"$6,881.19",Texachussets,Massachusetts,Electrical
+Upton,National Grid,$0.00,7.29,PR-3001778710,221R-004FREE,$0.00,Texachussets,Massachusetts,Electrical
+Westminster,National Grid,"$6,881.19",13.77,PR-3001763821,221R-021AUBI,"$6,881.19",Texachussets,Massachusetts,Electrical
+Dudley,National Grid,"$28,993.10",11.34,PR-3001966348,221R-021H136,"$28,993.10",Texachussets,Massachusetts,Electrical
+Auburn,National Grid,"$7,102.70",8.91,PR-3002006150,221R-0251224,"$7,102.70",Texachussets,Massachusetts,Electrical
+Auburn,National Grid,"$1,972.04",12.555,PR-3001761200,221R-099QUAN,"$1,972.04",Texachussets,Massachusetts,Electrical
+Gardner,National Grid,"$1,972.04",9.6,PR-3002184201,221R-239BARR,"$4,772.04",Texachussets,Massachusetts,Electrical
+Methuen,National Grid,"$7,100.00",12.96,PR-3001883478,222R-007AGUI,"$7,100.00",Texachussets,MA Wilmington,Electrical
+Revere,National Grid,"$1,972.04",13.77,PR-3001906942,222R-011CLEM,"$11,872.04",Texachussets,MA Wilmington,Electrical
+Lowell,National Grid,"$1,972.04",5.6,PR-3002240120,222R-777VALV,"$1,972.04",Texachussets,MA Wilmington,Electrical
+Brockton,National Grid,"$7,102.70",14.175,PR-3001804635,223R-098VAZ,"$7,102.70",Texachussets,MA-223 Massachusetts East,Electrical
+Sutton,National Grid,"$7,483.28",6.97,PR-3002840952,221R-003VAL3,"$9,683.28",Texachussets,Massachusetts,Electrical
+Worcester,National Grid,"$7,483.28",5.74,PR-3003118023,221R-006OSAG,"$7,483.28",Texachussets,Massachusetts,Electrical
+Bellingham,National Grid,"$9,634.62",13.12,PR-3002992886,221R-008GEFF,"$9,634.62",Texachussets,Massachusetts,Electrical
+Worcester,National Grid,"$12,270.25",13.12,PR-3003051951,221R-009DROZ,"$12,270.25",Texachussets,Massachusetts,Electrical
+Bellingham,National Grid,"$14,626.01",10,PR-3002268349,221R-011GAR4,"$16,126.01",Texachussets,Massachusetts,Electrical
+Worcester,National Grid,"$5,458.39",9.2,PR-3002620973,221R-012TRA1,"$6,958.39",Texachussets,Massachusetts,Electrical
+Spencer,National Grid,"$2,038.32",6.8,PR-3002614422,221R-016CHHE,"$4,238.32",Texachussets,Massachusetts,Electrical
+Sturbridge,National Grid,"$7,816.28",8.8,PR-3002611220,221R-017HOWL,"$7,816.28",Texachussets,Massachusetts,Electrical
+Leicester,National Grid,"$7,483.28",11.07,PR-3003141767,221R-020BRE1,"$9,283.28",Texachussets,Massachusetts,Electrical
+Millbury,National Grid,"$7,658.50",10.4,PR-3002790458,221R-020CART,"$7,658.50",Texachussets,Massachusetts,Electrical
+Charlton,National Grid,"$9,497.24",8.61,PR-3003111444,221R-021SIE2,"$9,497.24",Texachussets,Massachusetts,Electrical
+Oxford,National Grid,"$7,658.50",8.2,PR-3002950182,221R-023GAG1,"$7,658.50",Texachussets,Massachusetts,Electrical
+Auburn,National Grid,"$7,816.28",11.07,PR-3003445269,221R-023TUPP,"$9,316.28",Texachussets,Massachusetts,Electrical
+Marlborough,National Grid,"$7,658.50",7.79,PR-3002908895,221R-026COUT,"$7,658.50",Texachussets,Massachusetts,Electrical
+Webster,National Grid,"$7,816.28",13.53,PR-3003156921,221R-034THE4,"$7,816.28",Texachussets,Massachusetts,Electrical
+Whitinsville,National Grid,"$7,102.70",12.4,PR-3002306816,221R-036GIEM,"$7,102.70",Texachussets,Massachusetts,Electrical
+Millbury,National Grid,"$7,658.50",10.66,PR-3003044724,221R-041LENN,"$7,658.50",Texachussets,Massachusetts,Electrical
+Worcester,National Grid,"$11,541.61",4.51,PR-3002937670,221R-042NJAU,"$11,541.61",Texachussets,Massachusetts,Electrical
+Worcester,National Grid,"$11,130.92",12,PR-3002239480,221R-042SAN1,"$11,130.92",Texachussets,Massachusetts,Electrical
+Dudley,National Grid,"$12,035.31",26.24,PR-3003414575,221R-043FLYN,"$12,035.31",Texachussets,Massachusetts,Electrical
+Worcester,National Grid,"$21,300.00",13.53,PR-3003215720,221R-049KAR1,"$21,300.00",Texachussets,Massachusetts,Electrical
+Shirley,National Grid,"$7,483.28",14.76,PR-3003381076,221R-054LIND,"$7,483.28",Texachussets,Massachusetts,Electrical
+Clinton,National Grid,"$9,591.47",11.48,PR-3002927311,221R-063CAFA,"$9,591.47",Texachussets,Massachusetts,Electrical
+Athol,National Grid,"$8,858.36",8,PR-3002740718,221R-067MCGU,"$8,858.36",Texachussets,Massachusetts,Electrical
+Auburn,National Grid,"$11,435.70",20.09,PR-3003388415,221R-075CAM1,"$11,435.70",Texachussets,Massachusetts,Electrical
+Brookfield,National Grid,"$9,731.91",13.12,PR-3003052869,221R-084DUNN,"$12,931.91",Texachussets,Massachusetts,Electrical
+Northbridge,National Grid,"$2,100.00",10.66,PR-3003105766,221R-116MANN,"$2,100.00",Texachussets,Massachusetts,Electrical
+Athol,National Grid,"$7,763.11",5.33,PR-3002933318,221R-135LAVO,"$7,763.11",Texachussets,Massachusetts,Electrical
+Uxbridge,National Grid,"$7,717.94",6.97,PR-3003119216,221R-162BLA1,"$7,717.94",Texachussets,Massachusetts,Electrical
+Leominster,National Grid,"$1,919.43",6.97,PR-3003324961,221R-190PLAN,"$5,919.43",Texachussets,Massachusetts,Electrical
+Worcester,National Grid,"$7,483.28",8.2,PR-3003020925,221R-288KAR1,"$9,283.28",Texachussets,Massachusetts,Electrical
+Rutland,National Grid,"$7,816.28",11.48,PR-3003369859,221R-346SPER,"$7,816.28",Texachussets,Massachusetts,Electrical
+Barre,National Grid,"$7,869.18",9.02,PR-3002791271,221R-362MCIN,"$7,869.18",Texachussets,Massachusetts,Electrical
+METHUEN,National Grid,"$7,717.94",8.61,PR-3003490812,222R-008FAZI,"$9,917.94",Texachussets,MA Wilmington,Electrical
+Methuen,National Grid,"$7,717.94",17.63,PR-3003005017,222R-009CAB3,"$10,517.94",Texachussets,MA Wilmington,Electrical
+Methuen,National Grid,"$2,038.32",12.4,PR-3002622147,222R-012GIEN,"$2,038.32",Texachussets,MA Wilmington,Electrical
+Methuen,National Grid,"$7,763.11",9.02,PR-3002953342,222R-019MEND,"$7,763.11",Texachussets,MA Wilmington,Electrical
+Methuen,National Grid,"$8,933.00",11.48,PR-3003137080,222R-037RAME,"$8,933.00",Texachussets,MA Wilmington,Electrical
+WEST NEWBURY,National Grid,"$3,957.74",10.25,PR-3003484975,222R-041LUCH,"$3,957.74",Texachussets,MA Wilmington,Electrical
+Lawrence,National Grid,"$7,717.94",9.84,PR-3003295180,222R-045GOOD,"$11,717.94",Texachussets,MA Wilmington,Electrical
+Salem,National Grid,"$8,578.53",7.38,PR-3003403251,222R-045OWEN,"$8,578.53",Texachussets,MA Wilmington,Electrical
+Lawrence,National Grid,"$1,972.04",9.72,PR-3001819507,222R-045ROJA,"$1,972.04",Texachussets,MA Wilmington,Electrical
+Saugus,National Grid,"$1,919.43",8.4,PR-3002334348,222R-057BAR1,"$1,919.43",Texachussets,MA Wilmington,Electrical
+Haverhill,National Grid,"$7,483.28",4.1,PR-3002934402,222R-060MALD,"$7,483.28",Texachussets,MA Wilmington,Electrical
+North Andover,National Grid,"$4,500.00",11.07,PR-3003149710,222R-365CHER,"$9,300.00",Texachussets,MA Wilmington,Electrical
+Lawrence,National Grid,"$7,658.50",13.53,PR-3003061808,222R-622GER1,"$7,658.50",Texachussets,MA Wilmington,Electrical
+Plainville,National Grid,$0.00,13.53,PR-3003294845,223R-005BOUD,$0.00,Texachussets,MA-223 Massachusetts East,Electrical
+Brockton,National Grid,"$7,763.11",7.38,PR-3002938753,223R-005BRO1,"$7,763.11",Texachussets,MA-223 Massachusetts East,Electrical
+Brockton,National Grid,"$7,816.28",11.07,PR-3003459185,223R-008LOPE,"$7,816.28",Texachussets,MA-223 Massachusetts East,Electrical
+Randolph,National Grid,"$17,452.30",14.25,PR-3001263520,223R-010DEST,"$24,252.30",Texachussets,MA-223 Massachusetts East,Electrical
+Randolph,National Grid,"$10,462.07",4.92,PR-3002618958,223R-010SEVE,"$10,462.07",Texachussets,MA-223 Massachusetts East,Electrical
+South Easton,National Grid,"$1,919.43",12.8,PR-3002360180,223R-014DEV1,"$1,919.43",Texachussets,MA-223 Massachusetts East,Electrical
+Randolph,National Grid,"$7,816.28",9.84,PR-3003251262,223R-015BER1,"$9,616.28",Texachussets,MA-223 Massachusetts East,Electrical
+Attleboro,National Grid,$0.00,12.71,PR-3003104130,223R-015GAR2,$0.00,Texachussets,MA-223 Massachusetts East,Electrical
+Randolph,National Grid,"$18,115.65",8.61,PR-3002216197,223R-015HAR1,"$18,115.65",Texachussets,MA-223 Massachusetts East,Electrical
+Randolph,National Grid,"$2,038.32",11.2,PR-3002599032,223R-017GUER,"$2,038.32",Texachussets,MA-223 Massachusetts East,Electrical
+Attleboro,National Grid,"$8,669.79",9.84,PR-3002975197,223R-017NORM,"$11,469.79",Texachussets,MA-223 Massachusetts East,Electrical
+Randolph,National Grid,$0.00,13.94,PR-3002899265,223R-022TER1,$0.00,Texachussets,MA-223 Massachusetts East,Electrical
+Brockton,National Grid,"$6,881.19",8.4,PR-3002195036,223R-023HAYD,"$6,881.19",Texachussets,MA-223 Massachusetts East,Electrical
+Brockton,National Grid,"$7,763.11",11.07,PR-3002406399,223R-023MACA,"$9,563.11",Texachussets,MA-223 Massachusetts East,Electrical
+Brockton,National Grid,"$9,603.23",9.2,PR-3002339533,223R-024POM1,"$9,603.23",Texachussets,MA-223 Massachusetts East,Electrical
+Brockton,National Grid,"$7,763.11",8.505,PR-3002953419,223R-026BENJ,"$13,063.11",Texachussets,MA-223 Massachusetts East,Electrical
+Brockton,National Grid,"$7,816.28",5.33,PR-3003266926,223R-028BRO1,"$9,316.28",Texachussets,MA-223 Massachusetts East,Electrical
+Randolph,National Grid,"$2,038.32",11.48,PR-3003219115,223R-034BOVE,"$3,787.32",Texachussets,MA-223 Massachusetts East,Electrical
+Randolph,National Grid,"$7,423.83",12.3,PR-3003000029,223R-035COIM,"$10,923.83",Texachussets,MA-223 Massachusetts East,Electrical
+Brockton,National Grid,"$1,919.43",8.61,PR-3003018101,223R-041SHAW,"$1,919.43",Texachussets,MA-223 Massachusetts East,Electrical
+Randolph,National Grid,"$2,038.32",3.2,PR-3002550326,223R-045BELO,"$2,038.32",Texachussets,MA-223 Massachusetts East,Electrical
+Norwell,National Grid,"$8,753.75",12.8,PR-3002585625,223R-046URBA,"$8,753.75",Texachussets,MA-223 Massachusetts East,Electrical
+Brockton,National Grid,"$7,763.11",7.2,PR-3002285174,223R-048FRAN,"$9,563.11",Texachussets,MA-223 Massachusetts East,Electrical
+Holbrook,National Grid,"$7,423.83",14.76,PR-3002936656,223R-060KHON,"$7,423.83",Texachussets,MA-223 Massachusetts East,Electrical
+Randolph,National Grid,"$7,483.28",9.02,PR-3003041781,223R-069BOS1,"$9,683.28",Texachussets,MA-223 Massachusetts East,Electrical
+Brockton,National Grid,"$7,423.83",8,PR-3002453948,223R-079MURD,"$7,423.83",Texachussets,MA-223 Massachusetts East,Electrical
+SWANSEA,National Grid,"$8,943.60",7.6,PR-3003504292,223R-086MONI,"$8,943.60",Texachussets,MA-223 Massachusetts East,Electrical
+Bridgewater,National Grid,"$9,812.68",14.35,PR-3003392248,223R-095GOOD,"$9,812.68",Texachussets,MA-223 Massachusetts East,Electrical
+Brockton,National Grid,"$1,919.43",9.2,PR-3002483718,223R-121CORR,"$1,919.43",Texachussets,MA-223 Massachusetts East,Electrical
+Brockton,National Grid,"$3,533.95",9.315,PR-3001838151,223R-123RA57,"$4,933.95",Texachussets,MA-223 Massachusetts East,Electrical
+BROCKTON,National Grid,"$7,816.28",4.92,PR-3003537248,223R-135RAM1,"$7,816.28",Texachussets,MA-223 Massachusetts East,Electrical
+Fall River,National Grid,"$9,314.70",3.28,PR-3002949342,223R-144SOUS,"$9,314.70",Texachussets,MA-223 Massachusetts East,Electrical
+Attleboro,National Grid,$887.97,14.4,PR-3002242508,223R-146BORD,"$3,787.97",Texachussets,MA-223 Massachusetts East,Electrical
+North Dighton,National Grid,"$7,816.28",11.07,PR-3003051421,223R-154NET2,"$7,816.28",Texachussets,MA-223 Massachusetts East,Electrical
+Abington,National Grid,"$7,000.00",11.89,PR-3003190084,223R-154SEV1,"$7,000.00",Texachussets,MA-223 Massachusetts East,Electrical
+STOUGHTON,National Grid,"$7,483.28",12.3,PR-3003519153,223R-183LICO,"$10,683.28",Texachussets,MA-223 Massachusetts East,Electrical
+Abington,National Grid,"$7,816.28",16.81,PR-3003204558,223R-192REYE,"$7,816.28",Texachussets,MA-223 Massachusetts East,Electrical
+Randolph,National Grid,"$2,000.00",5.67,PR-3001727889,223R-223BEN2,"$2,000.00",Texachussets,MA-223 Massachusetts East,Electrical
+Brockton,National Grid,"$7,423.83",13.6,PR-3002572345,223R-287PER1,"$9,223.83",Texachussets,MA-223 Massachusetts East,Electrical
+Quincy,National Grid,"$1,919.43",11.89,PR-3003414295,223R-554HUAN,"$4,119.43",Texachussets,MA-223 Massachusetts East,Electrical
+Dighton,National Grid,"$8,000.00",5.33,PR-3003087032,223R-555NEVI,"$8,000.00",Texachussets,MA-223 Massachusetts East,Electrical
+E Bridgewtr,National Grid,"$2,038.32",8,PR-3002446318,223R-841GRAM,"$2,038.32",Texachussets,MA-223 Massachusetts East,Electrical
+Stoughton,National Grid,"$7,816.28",3.28,PR-3003540030,223R-857RIC1,"$7,816.28",Texachussets,MA-223 Massachusetts East,Electrical
+Woonsocket,National Grid,"$9,355.22",8.8,PR-3002707364,261R-091SOU1,"$9,355.22",Texachussets,RI Rhode Island,Electrical
+Webster,National Grid,"$10,500.00",5.53,PR-3003408810,221R-014LEB1,$0.00,Texachussets,Massachusetts,Electrical
+Milford,National Grid,"$1,500.00",5.33,PR-3003487262,221R-018DEM1,$0.00,Texachussets,Massachusetts,Electrical
+Barre,National Grid,$0.00,4.1,PR-3003254200,221R-107DESM,$0.00,Texachussets,Massachusetts,Electrical
+Lynn,National Grid,$0.00,8.1,PR-3001885453,222R-563ALAM,$0.00,Texachussets,MA Wilmington,Electrical
+Holbrook,National Grid,"$8,256.47",5.33,PR-3003250149,223R-015BOYE,$0.00,Texachussets,MA-223 Massachusetts East,Electrical
+Brockton,National Grid,"$14,135.00",10.25,PR-3002972005,223R-050PIE2,"$1,000.00",Texachussets,MA-223 Massachusetts East,Electrical
+Abington,National Grid,"$7,816.28",16.81,PR-3003204558,223R-192REYE,"$7,816.28",Texachussets,MA-223 Massachusetts East,Electrical
+Brockton,National Grid,$0.00,7.38,PR-3002915411,223R-680NKE1,"$4,400.00",Texachussets,MA-223 Massachusetts East,Electrical
+SUTTON,National Grid,"$9,445.16",16.81,PR-3004498587,221R-001COOK,"$9,445.16",Texachussets,Massachusetts,Electrical
+NORTHBRIDGE,National Grid,"$9,000.00",16.605,PR-3004257577,221R-004REYN,"$15,000.00",Texachussets,Massachusetts,Electrical
+MONSON,National Grid,"$1,500.00",2.46,PR-3004544756,221R-005DUGG2,"$1,850.00",Texachussets,Massachusetts,Electrical
+Millbury,National Grid,"$2,027.12",13.12,PR-3004475401,221R-006DELA,"$2,027.12",Texachussets,Massachusetts,Electrical
+WILBRAHAM,National Grid,"$8,157.66",6.97,PR-3004195285,221R-007GRIM,"$9,657.66",Texachussets,Massachusetts,Electrical
+MILFORD,National Grid,"$21,980.02",21.32,PR-3003831787,221R-007LOPE,"$21,980.02",Texachussets,Massachusetts,Electrical
+WEBSTER,National Grid,"$4,500.00",6.15,PR-3004742554,221R-008CAZO,"$6,300.00",Texachussets,Massachusetts,Electrical
+MILFORD,National Grid,"$7,483.28",15.17,PR-3003951985,221R-012DASI,"$7,483.28",Texachussets,Massachusetts,Electrical
+CLINTON,National Grid,"$8,546.42",8.61,PR-3003878511,221R-017MORA2,"$8,546.42",Texachussets,Massachusetts,Electrical
+DUDLEY,National Grid,"$7,483.28",13.53,PR-3003892552,221R-017ROGA,"$7,483.28",Texachussets,Massachusetts,Electrical
+WORCESTER,National Grid,"$11,156.54",8.2,PR-3004586058,221R-01CCOST,"$11,156.54",Texachussets,Massachusetts,Electrical
+SOUTHBRIDGE,National Grid,"$1,500.00",6.56,PR-3004549150,221R-021MCIN,"$1,500.00",Texachussets,Massachusetts,Electrical
+BELLINGHAM,National Grid,"$7,442.16",10.25,PR-3004455313,221R-037PHAK,"$7,442.16",Texachussets,Massachusetts,Electrical
+WILBRAHAM,National Grid,"$2,027.12",15.17,PR-3004658279,221R-056MEST,"$3,827.12",Texachussets,Massachusetts,Electrical
+GARDNER,National Grid,"$7,483.28",3.28,PR-3003813855,221R-060BORK,"$7,483.28",Texachussets,Massachusetts,Electrical
+WEST BROOKFIELD,National Grid,"$8,920.25",15.39,PR-3004569813,221R-068DAND,"$8,920.25",Texachussets,Massachusetts,Electrical
+CHARLTON,National Grid,"$3,000.00",14.35,PR-3004590943,221R-069BITA,"$6,200.00",Texachussets,Massachusetts,Electrical
+MILLVILLE,National Grid,"$8,920.25",15.99,PR-3004775631,221R-077CRAN,"$8,920.25",Texachussets,Massachusetts,Electrical
+BARRE,National Grid,"$8,157.66",6.885,PR-3004268075,221R-091EDGE,"$8,157.66",Texachussets,Massachusetts,Electrical
+MARLBOROUGH,National Grid,"$2,500.00",4.1,PR-3004783356,221R-095LARS,"$2,500.00",Texachussets,Massachusetts,Electrical
+WORCESTER,National Grid,"$5,002.33",8.1,PR-3004362602,221R-106RODR2,"$5,002.33",Texachussets,Massachusetts,Electrical
+WORCESTER,National Grid,"$2,038.32",9.43,PR-3003784362,221R-117PHAM,"$4,238.32",Texachussets,Massachusetts,Electrical
+WILBRAHAM,National Grid,"$7,483.28",12.96,PR-3003776733,221R-11PGREN,"$9,683.28",Texachussets,Massachusetts,Electrical
+Webster,National Grid,"$7,717.94",13.2,PR-3003410029,221R-125WATE,"$7,717.94",Texachussets,Massachusetts,Electrical
+WESTMINSTER,National Grid,"$8,157.66",12.4,PR-3003809783,221R-131PICK,"$8,657.66",Texachussets,Massachusetts,Electrical
+WORCESTER,National Grid,"$2,500.00",17.38,PR-3004658267,221R-142BOUR,"$11,270.94",Texachussets,Massachusetts,Electrical
+Auburn,National Grid,"$8,157.66",10.25,PR-3004692281,221R-147HOJN,"$8,157.66",Texachussets,Massachusetts,Electrical
+ATHOL,National Grid,"$1,500.00",10.35,PR-3004802662,221R-157SAND2,"$1,500.00",Texachussets,Massachusetts,Electrical
+DUDLEY,National Grid,"$8,213.44",25.83,PR-3003687630,221R-15GUREN,"$8,213.44",Texachussets,Massachusetts,Electrical
+MENDON,National Grid,"$2,038.32",8.2,PR-3003573003,221R-176WOOD2,"$2,038.32",Texachussets,Massachusetts,Electrical
+Auburn,National Grid,"$7,717.94",9.84,PR-3003547550,221R-179SAGE,"$7,717.94",Texachussets,Massachusetts,Electrical
+MARLBOROUGH,National Grid,"$9,260.22",10.53,PR-3004295109,221R-189FERN,"$9,260.22",Texachussets,Massachusetts,Electrical
+BLACKSTONE,National Grid,"$8,920.25",12.71,PR-3004227388,221R-204DARO,"$9,920.25",Texachussets,Massachusetts,Electrical
+New Braintree,National Grid,"$9,521.60",9.84,PR-3003648854,221R-207GAUM,"$9,521.60",Texachussets,Massachusetts,Electrical
+Upton,National Grid,"$10,145.68",13.53,PR-3003616119,221R-22EALVE,"$10,145.68",Texachussets,Massachusetts,Electrical
+UPTON,National Grid,"$7,483.28",15.99,PR-3003763709,221R-235SLOA,"$7,483.28",Texachussets,Massachusetts,Electrical
+DOUGLAS,National Grid,"$2,038.32",26.65,PR-3003738347,221R-24MBREN,"$2,038.32",Texachussets,Massachusetts,Electrical
+Gardner,National Grid,"$8,157.66",5.33,PR-3004107644,221R-255CASE,"$8,157.66",Texachussets,Massachusetts,Electrical
+SPENCER,National Grid,"$7,717.94",8.2,PR-3003888345,221R-271BLOO,"$7,717.94",Texachussets,Massachusetts,Electrical
+LEOMINSTER,National Grid,"$2,027.12",8.2,PR-3004677406,221R-337QUIS2,"$2,027.12",Texachussets,Massachusetts,Electrical
+AUBURN,National Grid,"$10,059.27",22.55,PR-3003821505,221R-37CYURS,"$10,059.27",Texachussets,Massachusetts,Electrical
+WORCESTER,National Grid,"$2,038.32",9.43,PR-3003792090,221R-39WBROT,"$2,038.32",Texachussets,Massachusetts,Electrical
+DUDLEY,National Grid,"$2,038.32",15.17,PR-3003645786,221R-3GECRUZ,"$2,038.32",Texachussets,Massachusetts,Electrical
+Gardner,National Grid,"$2,027.12",8.61,PR-3004736955,221R-420GAUT,"$2,027.12",Texachussets,Massachusetts,Electrical
+WORCESTER,National Grid,"$7,483.28",4.51,PR-3003644057,221R-4ATOBEN,"$7,483.28",Texachussets,Massachusetts,Electrical
+OXFORD,National Grid,"$2,038.32",22.14,PR-3003653651,221R-4PIMCDO,"$2,038.32",Texachussets,Massachusetts,Electrical
+LEOMINSTER,National Grid,"$2,027.12",11.48,PR-3003699172,221R-51WAJUN,"$2,027.12",Texachussets,Massachusetts,Electrical
+NORTH BROOKFIELD,National Grid,"$2,038.32",6.56,PR-3003759515,221R-52BCUMM,"$2,038.32",Texachussets,Massachusetts,Electrical
+LEOMINSTER,National Grid,"$7,483.28",22.55,PR-3003670011,221R-56SCLOU,"$7,483.28",Texachussets,Massachusetts,Electrical
+MENDON,National Grid,"$8,920.25",9.43,PR-3003573989,221R-64BDANI,"$8,920.25",Texachussets,Massachusetts,Electrical
+MILFORD,National Grid,"$7,483.28",8.2,PR-3003666364,221R-73FKEEN,"$7,483.28",Texachussets,Massachusetts,Electrical
+Westminster,National Grid,"$8,157.66",9.43,PR-3003747457,221R-74SSCHI,"$9,157.66",Texachussets,Massachusetts,Electrical
+Northbridge,National Grid,"$7,816.28",9.43,PR-3003777204,221R-88KLAVA,"$7,816.28",Texachussets,Massachusetts,Electrical
+LAWRENCE,National Grid,"$7,816.28",5.74,PR-3003845292,222R-003REYE2,"$8,316.28",Texachussets,MA Wilmington,Electrical
+METHUEN,National Grid,"$10,184.78",4.1,PR-3004615339,222R-005LIZA2,"$10,184.78",Texachussets,MA Wilmington,Electrical
+MALDEN,National Grid,"$2,027.00",11.89,PR-3004010688,222R-010NAVA,"$2,027.00",Texachussets,MA Wilmington,Electrical
+LAWRENCE,National Grid,"$8,157.66",7.79,PR-3004107194,222R-027GUZM,"$8,157.66",Texachussets,MA Wilmington,Electrical
+ANDOVER,National Grid,"$8,157.66",4.92,PR-3004187025,222R-029PLAC,"$8,157.66",Texachussets,MA Wilmington,Electrical
+Saugus,National Grid,"$8,157.66",0,PR-3004339167,222R-072RIZZ2,"$8,157.66",Texachussets,MA Wilmington,Electrical
+REVERE,National Grid,"$9,942.54",8.2,PR-3003670643,222R-130FERN,"$14,642.54",Texachussets,MA Wilmington,Electrical
+Newburyport,National Grid,"$10,184.78",4.1,PR-3004619617,222R-142PALM2,"$10,184.78",Texachussets,MA Wilmington,Electrical
+Tewksbury,National Grid,"$7,773.33",14.76,PR-3004194474,222R-171LEON2,"$7,773.33",Texachussets,MA Wilmington,Electrical
+HAVERHILL,National Grid,$0.00,3.6,PR-3003580884,222R-303PIER2,"$1,800.00",Texachussets,MA Wilmington,Electrical
+Methuen,National Grid,"$8,157.66",6.56,PR-3003621833,222R-53GMORE,"$8,157.66",Texachussets,MA Wilmington,Electrical
+METHUEN,National Grid,"$7,483.28",10.935,PR-3003795902,222R-83ACANT,"$7,483.28",Texachussets,MA Wilmington,Electrical
+FOXBORO,National Grid,"$14,431.75",15.58,PR-3003901392,223R-001RAJE,"$14,431.75",Texachussets,MA-223 Massachusetts East,Electrical
+ATTLEBORO,National Grid,"$7,717.94",22.14,PR-3003978099,223R-003PACH,"$7,717.94",Texachussets,MA-223 Massachusetts East,Electrical
+AVON,National Grid,"$10,184.78",11.48,PR-3004619848,223R-007PALM,"$15,584.78",Texachussets,MA-223 Massachusetts East,Electrical
+REHOBOTH,National Grid,"$7,442.16",12.15,PR-3003739967,223R-009WARN,"$7,442.16",Texachussets,MA-223 Massachusetts East,Electrical
+RANDOLPH,National Grid,$0.00,17.82,PR-3004518208,223R-009WHIT2,$0.00,Texachussets,MA-223 Massachusetts East,Electrical
+RANDOLPH,National Grid,"$8,157.66",7.79,PR-3004155211,223R-012CAST,"$8,157.66",Texachussets,MA-223 Massachusetts East,Electrical
+Brockton,National Grid,"$5,053.76",6.56,PR-3003990314,223R-017SAIN,"$8,253.76",Texachussets,MA-223 Massachusetts East,Electrical
+STOUGHTON,National Grid,"$20,000.94",8.505,PR-3004254858,223R-019BAIL,"$20,000.94",Texachussets,MA-223 Massachusetts East,Electrical
+HANOVER,National Grid,"$8,157.66",10.53,PR-3004590197,223R-020SPIL,"$8,157.66",Texachussets,MA-223 Massachusetts East,Electrical
+NORTON,National Grid,"$11,255.65",18.86,PR-3004699613,223R-025SHEA2,"$11,255.65",Texachussets,MA-223 Massachusetts East,Electrical
+Stoughton,National Grid,"$8,920.25",11.89,PR-3004459734,223R-027FILS,"$11,120.25",Texachussets,MA-223 Massachusetts East,Electrical
+BROCKTON,National Grid,"$8,157.66",6.56,PR-3004642663,223R-028JENK,"$8,157.66",Texachussets,MA-223 Massachusetts East,Electrical
+STOUGHTON,National Grid,"$7,816.28",12.71,PR-3003872265,223R-035PHIL,"$7,816.28",Texachussets,MA-223 Massachusetts East,Electrical
+HOLBROOK,National Grid,"$2,027.12",11.07,PR-3003991439,223R-041GOME,"$2,027.12",Texachussets,MA-223 Massachusetts East,Electrical
+PEMBROKE,National Grid,"$7,483.28",7.38,PR-3004041774,223R-046MCDO2,"$7,483.28",Texachussets,MA-223 Massachusetts East,Electrical
+HANOVER,National Grid,"$8,000.00",26.24,PR-3003862052,223R-052WHIT,"$8,000.00",Texachussets,MA-223 Massachusetts East,Electrical
+BROCKTON,National Grid,"$15,001.00",9.84,PR-3004654053,223R-054AUGU,"$15,001.00",Texachussets,MA-223 Massachusetts East,Electrical
+BROCKTON,National Grid,"$16,231.24",10.66,PR-3003898666,223R-065JEAN,"$21,231.24",Texachussets,MA-223 Massachusetts East,Electrical
+BROCKTON,National Grid,"$2,027.12",10.25,PR-3003910042,223R-074PACH,"$4,227.12",Texachussets,MA-223 Massachusetts East,Electrical
+BROCKTON,National Grid,"$8,157.66",11.89,PR-3004534501,223R-082BING,"$9,557.66",Texachussets,MA-223 Massachusetts East,Electrical
+BROCKTON,National Grid,"$10,184.78",12.71,PR-3004203360,223R-099LACA,"$10,184.78",Texachussets,MA-223 Massachusetts East,Electrical
+HANOVER,National Grid,"$8,449.76",29.93,PR-3003792682,223R-108FORR,"$8,449.76",Texachussets,MA-223 Massachusetts East,Electrical
+ABINGTON,National Grid,"$8,157.66",16.81,PR-3004602521,223R-152MONT,"$9,157.66",Texachussets,MA-223 Massachusetts East,Electrical
+BROCKTON,National Grid,"$8,449.76",9.02,PR-3003866940,223R-155GOME2,"$8,449.76",Texachussets,MA-223 Massachusetts East,Electrical
+Weymouth,National Grid,"$7,483.28",7.38,PR-3003603753,223R-18WDAY,"$8,983.28",Texachussets,MA-223 Massachusetts East,Electrical
+REHOBOTH,National Grid,"$10,171.17",18.04,PR-3003811363,223R-194PIME2,"$10,171.17",Texachussets,MA-223 Massachusetts East,Electrical
+WESTPORT,National Grid,"$2,329.40",8.2,PR-3003623472,223R-228KUT2,"$2,329.40",Texachussets,MA-223 Massachusetts East,Electrical
+WEYMOUTH,National Grid,"$8,157.66",3.69,PR-3004689175,223R-250CURT,"$10,357.66",Texachussets,MA-223 Massachusetts East,Electrical
+BROCKTON,National Grid,"$17,020.21",6.97,PR-3004316328,223R-279PERE,"$19,220.21",Texachussets,MA-223 Massachusetts East,Electrical
+STOUGHTON,National Grid,"$8,000.00",9.84,PR-3003722704,223R-27FCELE,"$9,800.00",Texachussets,MA-223 Massachusetts East,Electrical
+Randolph,National Grid,"$7,483.28",9.84,PR-3003608839,223R-27MPENN,"$7,483.28",Texachussets,MA-223 Massachusetts East,Electrical
+Brockton,National Grid,"$9,094.06",12.3,PR-3003773601,223R-29SLOUI,"$9,094.06",Texachussets,MA-223 Massachusetts East,Electrical
+STOUGHTON,National Grid,"$2,027.12",10.25,PR-3004503181,223R-382STIN,"$2,027.12",Texachussets,MA-223 Massachusetts East,Electrical
+ATTLEBORO,National Grid,"$11,132.87",13.365,PR-3004419820,223R-440PENA,"$11,132.87",Texachussets,MA-223 Massachusetts East,Electrical
+Stoughton,National Grid,"$9,524.69",14.35,PR-3004648454,223R-460SAIN,"$11,724.69",Texachussets,MA-223 Massachusetts East,Electrical
+ATTLEBORO,National Grid,"$2,038.32",18.63,PR-3003845064,223R-4RAROSE,"$3,438.32",Texachussets,MA-223 Massachusetts East,Electrical
+FALL RIVER,National Grid,"$8,256.47",9.43,PR-3003744177,223R-50CBONA,"$8,256.47",Texachussets,MA-223 Massachusetts East,Electrical
+SCITUATE,National Grid,"$2,038.32",9.43,PR-3003699992,223R-50OROWE,"$2,038.32",Texachussets,MA-223 Massachusetts East,Electrical
+BROCKTON,National Grid,"$7,483.28",4.92,PR-3003705670,223R-51FNILE,"$7,483.28",Texachussets,MA-223 Massachusetts East,Electrical
+West Bridgewater,National Grid,"$11,435.70",8.61,PR-3003680744,223R-60CGENT,"$11,435.70",Texachussets,MA-223 Massachusetts East,Electrical
+BRIDGEWATER,National Grid,"$8,157.66",12.15,PR-3004423197,223R-635WINT,"$8,157.66",Texachussets,MA-223 Massachusetts East,Electrical
+ROCKLAND,National Grid,"$7,483.28",6.97,PR-3003814616,223R-68OKENN,"$7,483.28",Texachussets,MA-223 Massachusetts East,Electrical
+Dighton,National Grid,"$9,000.00",14.76,PR-3003735513,223R-757SNOO,"$9,000.00",Texachussets,MA-223 Massachusetts East,Electrical
+STOUGHTON,National Grid,"$7,773.33",9.43,PR-3004027206,223R-778WOOD,"$9,573.33",Texachussets,MA-223 Massachusetts East,Electrical
+RANDOLPH,National Grid,"$7,816.28",11.89,PR-3003761615,223R-80CGILL,"$7,816.28",Texachussets,MA-223 Massachusetts East,Electrical
+ABINGTON,National Grid,"$7,483.28",6.56,PR-3003759234,223R-84CWHIT,"$7,483.28",Texachussets,MA-223 Massachusetts East,Electrical
+WILBRAHAM,National Grid,"$8,157.66",10.25,PR-3004635314,221R-003SIMM2,$0.00,Texachussets,Massachusetts,Electrical
+WEBSTER,National Grid,"$11,980.36",9.84,PR-3004670031,221R-010LOPE,$0.00,Texachussets,Massachusetts,Electrical
+WORCESTER,National Grid,"$11,441.53",12.555,PR-3004344034,221R-054CANN,$0.00,Texachussets,Massachusetts,Electrical
+OXFORD,National Grid,"$7,483.28",8.8,PR-3003624291,221R-118GOUL,$0.00,Texachussets,Massachusetts,Electrical
+BROOKFIELD,National Grid,"$10,000.00",9.02,PR-3004229629,221R-133STAR,$0.00,Texachussets,Massachusetts,Electrical
+UPTON,National Grid,"$11,600.00",14.76,PR-3003605311,221R-133WATS2,$0.00,Texachussets,Massachusetts,Electrical
+CHARLTON,National Grid,"$8,000.00",10.25,PR-3003697414,221R-137POLI,$0.00,Texachussets,Massachusetts,Electrical
+ATHOL,National Grid,"$8,500.00",7.29,PR-3004340504,221R-254BEAU,$0.00,Texachussets,Massachusetts,Electrical
+WINCHENDON,National Grid,"$7,500.00",9.84,PR-3003811331,221R-319BROU,$0.00,Texachussets,Massachusetts,Electrical
+North Andover,National Grid,"$7,816.28",10.66,PR-3003663270,222R-095CHAL,$0.00,Texachussets,MA Wilmington,Electrical
+BOYERTOWN,Met-Ed,$0.00,29,PR-1338921820,241R-138LEA,$0.00,Atlantic Coast,PA Pennsylvania East,Electrical
+Lyndeborough,Eversource,"$2,446.84",18.4,PR-3002112217,222R-014DAC1,"$2,446.84",Texachussets,MA Wilmington,Electrical
+Plymouth,Eversource,$0.00,8.91,PR-3001859881,223R-035MAYB,$0.00,Texachussets,MA-223 Massachusetts East,Electrical
+East Lyme,Eversource,$0.00,13.12,PR-3002913005,231R-019MERC,$0.00,Atlantic Coast,CT - Hartford,Electrical
+Bloomfield Village,Eversource,$910.91,7.8,PR-3001679000,231R-006COUS,$910.91,Atlantic Coast,CT - Hartford,Electrical
+Meriden,Eversource,"$1,042.92",5.46,PR-3001637803,231R-117BACO,"$1,042.92",Atlantic Coast,CT - Hartford,Electrical
+Dartmouth,Eversource,"$8,048.79",3.24,PR-3001907119,223R-020DES1,$0.00,Texachussets,MA-223 Massachusetts East,Electrical
+New Bedford,Eversource,"$3,637.00",18.45,PR-3002971932,223R-201CRO1,"$13,637.00",Texachussets,MA-223 Massachusetts East,Electrical
+Maynard,Eversource,"$21,761.00",3.69,PR-3003999445,221R-012YOUN,"$21,761.00",Texachussets,Massachusetts,Electrical
+FRAMINGHAM,Eversource,$200.00,25.515,PR-3004312231,221R-099GOLD,"$1,700.00",Texachussets,Massachusetts,Electrical
+Pittsfield,Eversource,"$10,678.24",11.07,PR-3004081009,221R-185YOHA,"$10,678.24",Texachussets,Massachusetts,Electrical
+FRAMINGHAM,Eversource,"$14,639.00",20.5,PR-3004320787,221R-280KURZ,"$15,639.00",Texachussets,Massachusetts,Electrical
+OTIS,Eversource,"$3,321.54",10.125,PR-3004307050,221R-555BELL,"$3,321.54",Texachussets,Massachusetts,Electrical
+WOBURN,Eversource,"$9,690.00",20.5,PR-3004111609,222R-002LISA,"$9,690.00",Texachussets,MA Wilmington,Electrical
+BEDFORD,Eversource,"$3,730.87",17.63,PR-3004105412,222R-016BRON,"$9,730.87",Texachussets,MA Wilmington,Electrical
+SANDOWN,Eversource,"$1,169.68",25.01,PR-3003881668,222R-020PORC,"$1,169.68",Texachussets,MA Wilmington,Electrical
+Jaffrey,Eversource,"$3,197.99",18.04,PR-3004379377,222R-029MACK,"$3,197.99",Texachussets,MA Wilmington,Electrical
+FRANCESTOWN,Eversource,"$8,213.17",15.39,PR-3004339328,222R-077HACK,"$8,213.17",Texachussets,MA Wilmington,Electrical
+PLYMOUTH,Eversource,"$4,570.82",21.32,PR-3004295772,223R-015CAVE,"$4,570.82",Texachussets,MA-223 Massachusetts East,Electrical
+ROCHESTER,Eversource,"$10,803.52",21.73,PR-3004002557,223R-022PINH,"$10,803.52",Texachussets,MA-223 Massachusetts East,Electrical
+E FALMOUTH,Eversource,"$2,384.10",7.38,PR-3003825436,223R-120PERK2,"$2,384.10",Texachussets,MA-223 Massachusetts East,Electrical
+LAKEVILLE,Eversource,"$14,598.00",20.09,PR-3004490214,223R-145DESR,"$14,598.00",Texachussets,MA-223 Massachusetts East,Electrical
+CARVER,Eversource,"$1,973.76",9.84,PR-3003686264,223R-86CMASO,"$1,973.76",Texachussets,MA-223 Massachusetts East,Electrical
+HYANNIS,Eversource,"$4,139.06",13.12,PR-3003670005,223R-99PFROE,"$4,139.06",Texachussets,MA-223 Massachusetts East,Electrical
+HOLLISTON,Eversource,"$9,993.00",6.56,PR-3003618285,221R-270LAWR2,$0.00,Texachussets,Massachusetts,Electrical
+NEWTON,Eversource,"$3,017.00",17.82,PR-3003581594,222R-949MAMA,$0.00,Texachussets,MA Wilmington,Electrical
+HYANNIS,Eversource,"$4,139.06",13.12,PR-3003670005,223R-99PFROE,"$4,139.06",Texachussets,MA-223 Massachusetts East,Electrical
+,,"$2,711,759.37",,,,,,,
+,,"$6,550.14",,,,,,,
