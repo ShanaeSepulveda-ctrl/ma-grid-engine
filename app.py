@@ -94,7 +94,8 @@ col1, col2 = st.columns([1, 2])
 # Dynamically populate the dropdown with EVERY City from your sheet
 available_cities = ["Statewide Overview"]
 if not grid_data.empty:
-    unique_cities = sorted(grid_data['City'].unique().tolist())
+    # Forces everything to text, drops blanks, removes 'nan' strings, and sorts safely
+    unique_cities = sorted([str(city) for city in grid_data['City'].dropna().unique() if str(city).lower() != 'nan'])
     available_cities += unique_cities
 
 with col1:
