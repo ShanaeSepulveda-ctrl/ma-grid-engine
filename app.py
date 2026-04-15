@@ -2,10 +2,10 @@ import streamlit as st
 import pandas as pd
 import folium
 from streamlit_folium import st_folium
-import numpy as np
+import math
 
 # --- DASHBOARD CONFIGURATION ---
-st.set_page_config(page_title="Executive Grid Engine 14.0", page_icon="🦄", layout="wide")
+st.set_page_config(page_title="Executive Grid Engine 14.3", page_icon="🦄", layout="wide")
 
 st.title("⚡ National Grid Resilience Engine (Executive Dashboard)")
 st.markdown("Dynamic capacity mapping and financial exposure tracking powered by live CRM data.")
@@ -18,16 +18,19 @@ def load_and_clean_data():
         # Load your exact CSV
         df = pd.read_csv("ma_grid_data.csv")
         
-        # 1. Clean the City Column
+        # 1. Clean the City Column (Aggressive Scrubbing)
         if 'City' not in df.columns:
             st.error("Missing 'City' column in CSV.")
             return pd.DataFrame()
         
+        # Drop empty rows and force to title case
+        df = df.dropna(subset=['City'])
         df['City'] = df['City'].astype(str).str.title().str.strip()
+        df = df[df['City'].str.lower() != 'nan'] # Catch sneaky text 'nan'
+        df = df[df['City'] != ''] # Catch empty strings
 
         # 2. Clean the Financials (Total Cost)
         if 'Total Cost' in df.columns:
-            # Strip out dollar signs, commas, and convert to numbers
             df['TU_Cost'] = df['Total Cost'].astype(str).replace(r'[\$,]', '', regex=True)
             df['TU_Cost'] = pd.to_numeric(df['TU_Cost'], errors='coerce').fillna(0)
         else:
@@ -53,13 +56,11 @@ def load_and_clean_data():
             "New Bedford": (41.636, -70.934), "Northampton": (42.325, -72.641)
         }
         
-# If city is known, use coords. If unknown, mathematically scatter it inside MA borders.
-        # Wrapped city in str() to prevent TypeErrors on blank cells.
+        # Mathematical fallback for unknown cities to keep them inside MA
         def get_lat(city):
-            return ma_coords.get(city, 42.0 + (hash(str(city)) % 100) / 100.0 * 0.7)
-            
+            return ma_coords.get(city, 42.0 + (hash(city) % 100) / 100.0 * 0.7)
         def get_lon(city):
-            return ma_coords.get(city, -73.0 + (hash(str(city) + "lon") % 100) / 100.0 * 2.0)
+            return ma_coords.get(city, -73.0 + (hash(city + "lon") % 100) / 100.0 * 2.0)
             
         df['Lat'] = df['City'].apply(get_lat)
         df['Lon'] = df['City'].apply(get_lon)
@@ -91,11 +92,10 @@ if not grid_data.empty:
 st.subheader("1. Location Selection & System Design")
 col1, col2 = st.columns([1, 2])
 
-# Dynamically populate the dropdown with EVERY City from your sheet
+# Dynamically populate the dropdown safely
 available_cities = ["Statewide Overview"]
 if not grid_data.empty:
-    # Forces everything to text, drops blanks, removes 'nan' strings, and sorts safely
-    unique_cities = sorted([str(city) for city in grid_data['City'].dropna().unique() if str(city).lower() != 'nan'])
+    unique_cities = sorted(grid_data['City'].unique().tolist())
     available_cities += unique_cities
 
 with col1:
@@ -133,7 +133,16 @@ if not grid_data.empty:
     }).reset_index()
     
     for _, row in city_summary.iterrows():
-        # Heatmap logic based on actual financial thresholds
+        # Map Failsafe: Ensure coordinates are valid floats before drawing
+        try:
+            lat = float(row['Lat'])
+            lon = float(row['Lon'])
+            if math.isnan(lat) or math.isnan(lon):
+                continue # Skip bad data safely
+        except:
+            continue
+            
+        # Heatmap logic
         if row['TU_Cost'] > 10000:
             risk_color = "#ff4b4b" # Red
         elif row['TU_Cost'] > 0:
@@ -142,8 +151,8 @@ if not grid_data.empty:
             risk_color = "#00cc66" # Green
             
         folium.CircleMarker(
-            location=[row['Lat'], row['Lon']],
-            radius=8 if row['TU_Cost'] == 0 else 14, # Make expensive cities larger
+            location=[lat, lon],
+            radius=8 if row['TU_Cost'] == 0 else 14,
             popup=f"<b>{row['City']}</b><br>Utility: {row['Utility Company']}<br>Historical TU Exposure: ${row['TU_Cost']:,.2f}",
             color=risk_color,
             fill=True,
@@ -165,9 +174,8 @@ if target_found:
     
     city_history = grid_data[grid_data['City'] == selected_city]
     historical_exposure = city_history['TU_Cost'].mean() if not city_history.empty else 0
-    avg_system_size = city_history['System_Size'].mean() if not city_history.empty else 0
     
-    # Updated Timeline Logic per your instructions
+    # Timeline Logic
     if is_complex_review or historical_exposure > 5000:
         timeline_status = "4-8 Weeks (Transformer Review)"
         risk_level = "Red"
