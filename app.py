@@ -5,7 +5,7 @@ from streamlit_folium import st_folium
 import math
 
 # --- DASHBOARD CONFIGURATION ---
-st.set_page_config(page_title="Executive Grid Engine 14.4", page_icon="🦄", layout="wide")
+st.set_page_config(page_title="Executive Grid Engine 14.5", page_icon="🦄", layout="wide")
 
 st.title("⚡ National Grid Resilience Engine (Executive Dashboard)")
 st.markdown("Dynamic capacity mapping and financial exposure tracking powered by live CRM data.")
@@ -15,13 +15,12 @@ st.divider()
 @st.cache_data
 def load_and_clean_data():
     try:
-        # Load your exact CSV
         df = pd.read_csv("ma_grid_data.csv")
         
-        # 1. Clean the City Column (Aggressive Scrubbing)
+        # 1. Clean the City Column
         if 'City' not in df.columns:
             st.error("Missing 'City' column in CSV.")
-            return pd.DataFrame()
+            return pd.DataFrame(), []
         
         df = df.dropna(subset=['City'])
         df['City'] = df['City'].astype(str).str.title().str.strip()
@@ -33,53 +32,59 @@ def load_and_clean_data():
             df['TU_Cost'] = df['Total Cost'].astype(str).replace(r'[\$,]', '', regex=True)
             df['TU_Cost'] = pd.to_numeric(df['TU_Cost'], errors='coerce').fillna(0)
         else:
-            st.error("Missing 'Total Cost' column.")
             df['TU_Cost'] = 0.0
 
-        # 3. Clean Utility Company
         if 'Utility Company' not in df.columns:
             df['Utility Company'] = "Unknown Utility"
             
-        # 4. Clean System Size DC
         if 'System Size DC' in df.columns:
             df['System_Size'] = pd.to_numeric(df['System Size DC'], errors='coerce').fillna(0)
         else:
             df['System_Size'] = 0.0
 
-        # 5. PRECISION GEOCODING: Master MA Coordinate Database
+        # 5. PRECISION GEOCODING: The Mega MA Coordinate Database
         ma_coords = {
-            "Bellingham": (42.083, -71.475), "Springfield": (42.101, -72.589), "Ludlow": (42.160, -72.474), 
-            "Lynn": (42.466, -70.949), "Amherst": (42.380, -72.523), "Boston": (42.360, -71.058), 
-            "Worcester": (42.262, -71.802), "Westfield": (42.120, -72.749), "Fitchburg": (42.583, -71.802), 
-            "Brockton": (42.083, -71.018), "Acton": (42.485, -71.432), "Pittsfield": (42.450, -73.245), 
-            "Fall River": (41.701, -71.155), "New Bedford": (41.636, -70.934), "Northampton": (42.325, -72.641),
-            "Cambridge": (42.373, -71.109), "Lowell": (42.633, -71.316), "Quincy": (42.252, -71.002),
-            "Newton": (42.337, -71.209), "Framingham": (42.279, -71.416), "Haverhill": (42.776, -71.077),
-            "Taunton": (41.900, -71.089), "Weymouth": (42.218, -70.940), "Peabody": (42.527, -70.928),
-            "Billerica": (42.558, -71.268), "Marlborough": (42.345, -71.552), "Woburn": (42.479, -71.152),
-            "Shrewsbury": (42.295, -71.712), "Dartmouth": (41.626, -70.984), "Chelmsford": (42.599, -71.367),
-            "Andover": (42.658, -71.136), "Natick": (42.283, -71.349), "Randolph": (42.162, -71.041),
-            "Franklin": (42.083, -71.396), "Lexington": (42.447, -71.227), "Needham": (42.280, -71.235),
-            "Norwood": (42.194, -71.199), "Wellesley": (42.296, -71.292), "Milford": (42.141, -71.516)
+            "Abington": (42.104, -70.945), "Acton": (42.485, -71.432), "Agawam": (42.069, -72.615), "Amesbury": (42.858, -70.930),
+            "Amherst": (42.380, -72.523), "Andover": (42.658, -71.136), "Arlington": (42.415, -71.156), "Attleboro": (41.944, -71.283),
+            "Barnstable": (41.700, -70.300), "Bellingham": (42.083, -71.475), "Belmont": (42.395, -71.178), "Beverly": (42.558, -70.880),
+            "Billerica": (42.558, -71.268), "Boston": (42.360, -71.058), "Braintree": (42.207, -71.000), "Bridgewater": (41.990, -70.975),
+            "Brockton": (42.083, -71.018), "Brookline": (42.331, -71.121), "Burlington": (42.504, -71.195), "Cambridge": (42.373, -71.109),
+            "Canton": (42.158, -71.144), "Chelmsford": (42.599, -71.367), "Chelsea": (42.391, -71.032), "Chicopee": (42.148, -72.607),
+            "Dartmouth": (41.626, -70.984), "Dedham": (42.243, -71.167), "East Hampton": (42.266, -72.673), "Easton": (42.029, -71.102),
+            "Everett": (42.408, -71.053), "Fall River": (41.701, -71.155), "Falmouth": (41.551, -70.615), "Fitchburg": (42.583, -71.802),
+            "Framingham": (42.279, -71.416), "Franklin": (42.083, -71.396), "Gloucester": (42.615, -70.661), "Haverhill": (42.776, -71.077),
+            "Holyoke": (42.207, -72.616), "Lawrence": (42.707, -71.163), "Leominster": (42.525, -71.759), "Lexington": (42.447, -71.227),
+            "Lowell": (42.633, -71.316), "Ludlow": (42.160, -72.474), "Lynn": (42.466, -70.949), "Malden": (42.425, -71.066),
+            "Marlborough": (42.345, -71.552), "Medford": (42.418, -71.106), "Melrose": (42.458, -71.065), "Methuen": (42.726, -71.190),
+            "Milford": (42.141, -71.516), "Milton": (42.249, -71.071), "Natick": (42.283, -71.349), "Needham": (42.280, -71.235),
+            "New Bedford": (41.636, -70.934), "Newton": (42.337, -71.209), "North Adams": (42.700, -73.108), "Northampton": (42.325, -72.641),
+            "Norwood": (42.194, -71.199), "Peabody": (42.527, -70.928), "Pittsfield": (42.450, -73.245), "Plymouth": (41.958, -70.667),
+            "Quincy": (42.252, -71.002), "Randolph": (42.162, -71.041), "Reading": (42.525, -71.104), "Revere": (42.408, -71.011),
+            "Salem": (42.519, -70.896), "Saugus": (42.463, -71.012), "Shrewsbury": (42.295, -71.712), "Somerville": (42.387, -71.099),
+            "Springfield": (42.101, -72.589), "Stoughton": (42.125, -71.102), "Taunton": (41.900, -71.089), "Tewksbury": (42.610, -71.234),
+            "Waltham": (42.376, -71.235), "Watertown": (42.370, -71.183), "Wellesley": (42.296, -71.292), "West Springfield": (42.107, -72.620),
+            "Westfield": (42.120, -72.749), "Weymouth": (42.218, -70.940), "Winchester": (42.452, -71.137), "Woburn": (42.479, -71.152),
+            "Worcester": (42.262, -71.802)
         }
         
-        # Centralized fallback for completely unknown towns (places them in central MA instead of corners)
-        def get_lat(city):
-            return ma_coords.get(city, 42.25 + (hash(str(city)) % 100) / 1000.0)
-        def get_lon(city):
-            return ma_coords.get(city, -71.80 + (hash(str(city) + "lon") % 100) / 1000.0)
-            
-        df['Lat'] = df['City'].apply(get_lat)
-        df['Lon'] = df['City'].apply(get_lon)
+        # If city has coords, assign them. If not, set to None.
+        df['Lat'] = df['City'].apply(lambda c: ma_coords.get(c, None))
+        df['Lon'] = df['City'].apply(lambda c: ma_coords.get(c, None)[1] if ma_coords.get(c) else None)
         
-        return df
+        # Track which cities are missing from our dictionary
+        missing_cities = df[df['Lat'].isna()]['City'].unique().tolist()
+        
+        # Drop rows without coordinates so the map draws cleanly without clumping
+        df_mapped = df.dropna(subset=['Lat', 'Lon'])
+        
+        return df_mapped, missing_cities
 
     except FileNotFoundError:
-        st.error("🚨 'ma_grid_data.csv' not found! Please ensure your downloaded Google Sheet is in the exact same folder as this app.py file.")
-        return pd.DataFrame()
+        st.error("🚨 'ma_grid_data.csv' not found!")
+        return pd.DataFrame(), []
 
 # Execute the loader
-grid_data = load_and_clean_data()
+grid_data, unmapped_cities = load_and_clean_data()
 
 # --- EXECUTIVE FINANCIAL KPI PANEL ---
 if not grid_data.empty:
@@ -87,11 +92,11 @@ if not grid_data.empty:
     avg_tu_cost = grid_data[grid_data['TU_Cost'] > 0]['TU_Cost'].mean() if not grid_data[grid_data['TU_Cost'] > 0].empty else 0
     total_projects_flagged = len(grid_data[grid_data['TU_Cost'] > 0])
     
-    st.error(f"🚨 **EXECUTIVE BRIEFING: Verified Utility Upgrade Exposure: ${total_tu_invoiced:,.2f}**")
+    st.error(f"🚨 **EXECUTIVE BRIEFING: Mapped Utility Upgrade Exposure: ${total_tu_invoiced:,.2f}**")
     
     col_kpi1, col_kpi2, col_kpi3 = st.columns(3)
-    col_kpi1.metric("Total High-Friction Projects", total_projects_flagged)
-    col_kpi2.metric("Average TU Invoice (When Flagged)", f"${avg_tu_cost:,.2f}")
+    col_kpi1.metric("Mapped High-Friction Projects", total_projects_flagged)
+    col_kpi2.metric("Average TU Invoice", f"${avg_tu_cost:,.2f}")
     col_kpi3.metric("Highest Saturated Utility", grid_data['Utility Company'].mode()[0])
     st.divider()
 
@@ -99,10 +104,9 @@ if not grid_data.empty:
 st.subheader("1. Location Selection & System Design")
 col1, col2 = st.columns([1, 2])
 
-# Dynamically populate the dropdown safely
 available_cities = ["Statewide Overview"]
 if not grid_data.empty:
-    unique_cities = sorted([str(city) for city in grid_data['City'].unique() if str(city).lower() != 'nan'])
+    unique_cities = sorted([str(city) for city in grid_data['City'].unique()])
     available_cities += unique_cities
 
 with col1:
@@ -120,7 +124,7 @@ with col2:
 # --- THE DYNAMIC MAP ENGINE ---
 st.divider()
 st.subheader("🗺️ Live Grid Saturation Map")
-st.caption("Visualizing utility infrastructure capacity based on your verified pipeline data.")
+st.caption("Visualizing utility infrastructure capacity based on verified pipeline data.")
 
 start_lat, start_lon, start_zoom = 42.25, -71.80, 8
 if target_found and not grid_data[grid_data['City'] == selected_city].empty:
@@ -139,14 +143,6 @@ if not grid_data.empty:
     }).reset_index()
     
     for _, row in city_summary.iterrows():
-        try:
-            lat = float(row['Lat'])
-            lon = float(row['Lon'])
-            if math.isnan(lat) or math.isnan(lon):
-                continue
-        except:
-            continue
-            
         if row['TU_Cost'] > 10000:
             risk_color = "#ff4b4b" 
         elif row['TU_Cost'] > 0:
@@ -155,7 +151,7 @@ if not grid_data.empty:
             risk_color = "#00cc66" 
             
         folium.CircleMarker(
-            location=[lat, lon],
+            location=[row['Lat'], row['Lon']],
             radius=8 if row['TU_Cost'] == 0 else 14,
             popup=f"<b>{row['City']}</b><br>Utility: {row['Utility Company']}<br>Historical TU Exposure: ${row['TU_Cost']:,.2f}",
             color=risk_color,
@@ -200,16 +196,16 @@ if target_found:
 
     if risk_level == "Red":
         st.warning("⚠️ **CAPACITY WARNING:** The requested system size and location historically require an extended utility transformer review (4-8 weeks).")
-        st.markdown("""
-        **💡 Feasibility Consultation (For Interconnection/Design Teams):**
-        To mitigate delays and protect the margin, evaluate the following alternative design pathways:
-        * **Export Limiting:** Can a Power Control System (PCS) be used to hard-cap export below the 25kW threshold?
-        * **Non-Export Profiles:** Can the ESS be configured primarily for self-consumption?
-        """)
     elif risk_level == "Yellow":
         st.info("🔄 **MODERATE REVIEW:** Moderate timelines expected (2-4 weeks). Proceed with standard engineering review while monitoring utility study queues.")
     else:
         st.success("✅ **CAPACITY OPEN:** System falls within Simplified thresholds. Expect rapid utility approval (1-2 weeks).")
 
 st.divider()
-st.caption("🔧 Powered by live 2024-2026 pipeline data. Export the latest Salesforce/CRM tracking sheet to 'ma_grid_data.csv' to update the dashboard.")
+
+# --- THE MISSING CITY DETECTOR ---
+if len(unmapped_cities) > 0:
+    with st.expander("⚠️ Data Audit: Unmapped Cities"):
+        st.warning(f"**{len(unmapped_cities)} cities from your CSV are missing from the map database.**")
+        st.write("To keep the map perfectly accurate, we hid these cities because we don't have their exact coordinates yet. To fix this, ask your Data Strategy Lead (Shanae) to add these cities to the Python dictionary:")
+        st.code(", ".join(unmapped_cities))
