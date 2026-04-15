@@ -53,11 +53,13 @@ def load_and_clean_data():
             "New Bedford": (41.636, -70.934), "Northampton": (42.325, -72.641)
         }
         
-        # If city is known, use coords. If unknown, mathematically scatter it inside MA borders
+# If city is known, use coords. If unknown, mathematically scatter it inside MA borders.
+        # Wrapped city in str() to prevent TypeErrors on blank cells.
         def get_lat(city):
-            return ma_coords.get(city, 42.0 + (hash(city) % 100) / 100.0 * 0.7)
+            return ma_coords.get(city, 42.0 + (hash(str(city)) % 100) / 100.0 * 0.7)
+            
         def get_lon(city):
-            return ma_coords.get(city, -73.0 + (hash(city + "lon") % 100) / 100.0 * 2.0)
+            return ma_coords.get(city, -73.0 + (hash(str(city) + "lon") % 100) / 100.0 * 2.0)
             
         df['Lat'] = df['City'].apply(get_lat)
         df['Lon'] = df['City'].apply(get_lon)
