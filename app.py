@@ -16,7 +16,6 @@ st.divider()
 def process_data():
     df_list = []
     
-    # 1. Auto-Load Active Projects from GitHub
     try:
         df_a = pd.read_csv("active_projects.csv")
         df_a['Status'] = 'Active'
@@ -26,7 +25,6 @@ def process_data():
     except FileNotFoundError:
         pass
 
-    # 2. Auto-Load Cancelled Projects from GitHub
     try:
         df_c = pd.read_csv("cancelled_projects.csv")
         df_c['Status'] = 'Cancelled'
@@ -42,7 +40,6 @@ def process_data():
 
     df_master = pd.concat(df_list, ignore_index=True)
     
-    # --- SANITIZATION & JOB CODE INGESTION ---
     if 'Job Code' not in df_master.columns:
         df_master['Job Code'] = "Unknown"
     else:
@@ -179,13 +176,11 @@ if not grid_data.empty:
     avg_tu_cost = flagged_projects['TU_Cost'].mean() if not flagged_projects.empty else 0
     total_projects_flagged = len(flagged_projects)
     
-    # The new sleek, uniform metric bar
     st.markdown("### 📈 Live Pipeline Financial Overview")
     col_kpi1, col_kpi2, col_kpi3, col_kpi4 = st.columns(4)
     col_kpi1.metric("Total TU Invoice Exposure", f"${total_tu_invoiced:,.2f}")
     col_kpi2.metric("Projects with TU Exposure", total_projects_flagged)
     col_kpi3.metric("Average Upgrade Invoice", f"${avg_tu_cost:,.2f}")
-    
     highest_util = grid_data['Utility Company'].mode()[0] if not grid_data['Utility Company'].empty else "Unknown"
     col_kpi4.metric("Utility with Highest TU Frequency", highest_util)
     st.divider()
@@ -273,7 +268,7 @@ if not grid_data.empty:
                 folium.CircleMarker(
                     location=[offset_lat, offset_lon],
                     radius=8 if row['TU_Cost'] == 0 else 12,
-                    popup=f"<b>{row['City']} (Active)</b><br>Job: {row['Job Code']}<br>Utility: {row['Utility Company']}<br>TU Invoice Amount: ${row['TU_Cost']:,.2f}",
+                    popup=f"<b>{row['City']} (Active)</b><br>Job: {row['Job Code']}<br>Utility: {row['Utility Company']}<br>Active Risk: ${row['TU_Cost']:,.2f}",
                     color="#ffffff", 
                     fill=True,
                     fill_color=risk_color,
@@ -292,7 +287,7 @@ if not grid_data.empty:
 
     st_folium(ma_map, width=1200, height=550, returned_objects=[])
 
-    # --- EXPECTATION DIAGNOSTICS ---
+    # --- CROSS-FUNCTIONAL STRATEGY COMMAND CENTER ---
     if target_found:
         total_kw = existing_kw + new_kw
         is_complex_review = total_kw > 25.0
@@ -301,21 +296,48 @@ if not grid_data.empty:
         historical_exposure = city_history['TU_Cost'].mean() if not city_history.empty else 0
         
         if is_complex_review or historical_exposure > 5000:
-            timeline_status = "4-8 Weeks (Transformer Review)"
+            timeline_status = "4-8 Weeks (Complex Review)"
             risk_level = "Red"
         elif historical_exposure > 0:
-            timeline_status = "2-4 Weeks (Moderate/Average)"
+            timeline_status = "2-4 Weeks (Moderate)"
             risk_level = "Yellow"
         else:
             timeline_status = "1-2 Weeks (Simplified)"
             risk_level = "Green"
 
         st.divider()
-        st.subheader("2. Capacity & Expectation Diagnostics")
+        st.subheader("2. Cross-Functional Strategy Matrix")
+        st.caption(f"Actionable intelligence for {selected_city} based on current risk profile.")
+        
+        # Core Metrics Bar
         col_a, col_b, col_c = st.columns(3)
-        col_a.metric("Total Parcel AC", f"{total_kw} kW", "- Complex Review Triggered" if is_complex_review else "+ Simplified Track", delta_color="inverse")
-        col_b.metric("Expected Approval Timeline", timeline_status)
-        col_c.metric("Est. Margin Risk", f"${historical_exposure + 2000:,.0f}" if historical_exposure > 0 else "$2,000", "High Risk" if risk_level == "Red" else "Acceptable", delta_color="inverse")
+        col_a.metric("Design: Total Parcel AC", f"{total_kw} kW", "- Complex Review Triggered" if is_complex_review else "+ Simplified Track", delta_color="inverse")
+        col_b.metric("CX/Sales: Expected Approval Timeline", timeline_status)
+        col_c.metric("Finance: Est. Sunk Margin Risk", f"${historical_exposure + 2000:,.0f}" if historical_exposure > 0 else "$2,000", "High Risk" if risk_level == "Red" else "Acceptable", delta_color="inverse")
+
+        # The Departmental Tabs
+        tab_cx, tab_design, tab_policy = st.tabs(["🤝 Sales & CX Actions", "📐 Design Engineering Actions", "🏛️ Policy & Exec Actions"])
+        
+        with tab_cx:
+            if risk_level == "Red":
+                st.error("**High Friction Zone:** Reps must set timeline expectations of 4-8+ weeks for utility review. Prepare the customer for potential upgrade fees upfront to prevent late-stage cancellations.")
+            elif risk_level == "Yellow":
+                st.warning("**Moderate Friction Zone:** Standard timelines may be delayed. Monitor Interconnection queues closely and proactively communicate 2-4 week review periods.")
+            else:
+                st.success("**Clearance Zone:** Green light for standard sales pitch. Expect rapid 1-2 week utility approvals.")
+                
+        with tab_design:
+            if is_complex_review:
+                st.error("**System Modification Recommended:** Parcel AC exceeds 25kW. Evaluate Power Control Systems (PCS) to hard-cap export below 25kW, or configure ESS for non-export to bypass Complex Study queues.")
+            else:
+                st.success("**Standard Design:** System size is within standard Simplified Track thresholds.")
+                
+        with tab_policy:
+            if risk_level == "Red" or risk_level == "Yellow":
+                util_name = city_history['Utility Company'].mode()[0] if not city_history.empty else "Utility"
+                st.info(f"**Lobbying Target:** {selected_city} is demonstrating repeated congestion with {util_name}. Log this data for the next DPU/Policy meeting to negotiate grid upgrade fee socialization.")
+            else:
+                st.write("No immediate policy escalation required for this market.")
 
     st.divider()
 
