@@ -309,13 +309,12 @@ if not grid_data.empty:
         st.subheader("2. Cross-Functional Strategy Matrix")
         st.caption(f"Actionable intelligence for {selected_city} based on current risk profile.")
         
-        # Core Metrics Bar
         col_a, col_b, col_c = st.columns(3)
         col_a.metric("Design: Total Parcel AC", f"{total_kw} kW", "- Complex Review Triggered" if is_complex_review else "+ Simplified Track", delta_color="inverse")
         col_b.metric("CX/Sales: Expected Approval Timeline", timeline_status)
         col_c.metric("Finance: Est. Sunk Margin Risk", f"${historical_exposure + 2000:,.0f}" if historical_exposure > 0 else "$2,000", "High Risk" if risk_level == "Red" else "Acceptable", delta_color="inverse")
 
-        # The Departmental Tabs
+        # THE UNIFIED LOGIC TABS
         tab_cx, tab_design, tab_policy = st.tabs(["🤝 Sales & CX Actions", "📐 Design Engineering Actions", "🏛️ Policy & Exec Actions"])
         
         with tab_cx:
@@ -327,10 +326,15 @@ if not grid_data.empty:
                 st.success("**Clearance Zone:** Green light for standard sales pitch. Expect rapid 1-2 week utility approvals.")
                 
         with tab_design:
+            # The Logic Upgrade: Accounts for both System Size AND Geographic Saturation
             if is_complex_review:
-                st.error("**System Modification Recommended:** Parcel AC exceeds 25kW. Evaluate Power Control Systems (PCS) to hard-cap export below 25kW, or configure ESS for non-export to bypass Complex Study queues.")
+                st.error(f"**System Modification Recommended:** Parcel AC ({total_kw}kW) exceeds the 25kW Simplified Track limit. Evaluate Power Control Systems (PCS) to hard-cap export below 25kW, or configure ESS for non-export to bypass Complex Study queues.")
+            elif risk_level == "Red":
+                st.error(f"**Grid Saturation Alert:** While the system size ({total_kw}kW) is under the 25kW limit, {selected_city} has a history of highly saturated transformers. Design conservatively. The utility may force secondary transformer upgrades regardless of system size.")
+            elif risk_level == "Yellow":
+                st.warning(f"**Moderate Congestion:** Standard AC sizing is acceptable, but ensure perfect SLD compliance to avoid administrative kickbacks in group study queues.")
             else:
-                st.success("**Standard Design:** System size is within standard Simplified Track thresholds.")
+                st.success(f"**Standard Design:** System size ({total_kw}kW) falls within Simplified thresholds and local grid capacity is historically open.")
                 
         with tab_policy:
             if risk_level == "Red" or risk_level == "Yellow":
