@@ -5,9 +5,9 @@ from streamlit_folium import st_folium
 import math
 
 # --- DASHBOARD CONFIGURATION ---
-st.set_page_config(page_title="Grid Intelligence Dashboard", page_icon="📊", layout="wide")
+st.set_page_config(page_title="MA Grid Intelligence", page_icon="📊", layout="wide")
 
-st.title("National Grid Resilience & Strategy Dashboard")
+st.title("MA Resilience & Strategy Dashboard")
 st.markdown("Enterprise pipeline intelligence, capacity mapping, and financial exposure tracking.")
 st.divider()
 
@@ -72,7 +72,7 @@ def process_data():
         return u.title()
     df_master['Utility Company'] = df_master['Utility Company'].apply(map_utility)
 
-    # --- PRECISION GEOCODING (Master Database Including 59 New Cities) ---
+    # --- PRECISION GEOCODING (Master Database) ---
     ma_coords = {
         "Abington": (42.104, -70.945), "Acton": (42.485, -71.432), "Agawam": (42.069, -72.615), "Amesbury": (42.858, -70.930),
         "Amherst": (42.380, -72.523), "Andover": (42.658, -71.136), "Arlington": (42.415, -71.156), "Attleboro": (41.944, -71.283),
@@ -104,8 +104,6 @@ def process_data():
         "Webster": (42.050, -71.880), "Hopedale": (42.128, -71.539), "Southwick": (42.055, -72.769), "Townsend": (42.668, -71.701), 
         "Whately": (42.430, -72.617), "Becket": (42.332, -73.080), "Monson": (42.104, -72.316), "Hanover": (42.115, -70.826), 
         "Charlton": (42.134, -71.970), "Newburyport": (42.812, -70.877), "West Bridgewater": (42.019, -71.005), "Lunenburg": (42.595, -71.722),
-        
-        # --- NEWLY ADDED 59 CITIES ---
         "Greenfield": (42.587, -72.599), "Montgomery": (42.231, -72.802), "Hinsdale": (42.441, -73.123), "Erving": (42.599, -72.417), 
         "Longmeadow": (42.049, -72.581), "West Townsend": (42.668, -71.745), "Emmaus": (40.539, -75.496), "Clinton": (42.416, -71.682), 
         "Dudley": (42.046, -71.931), "Rutland": (42.368, -71.947), "Uxbridge": (42.077, -71.630), "Rockport": (42.655, -70.620), 
@@ -136,7 +134,7 @@ raw_data, unmapped_cities = process_data()
 # --- SIDEBAR: ANALYTICS & SEARCH FILTERS ---
 if not raw_data.empty:
     st.sidebar.header("🔍 Direct Project Search")
-    search_job = st.sidebar.text_input("Enter Job Code (e.g., J-12345)")
+    search_job = st.sidebar.text_input("Enter Job Code (e.g., 221R-057SANT)")
     st.sidebar.divider()
     
     st.sidebar.header("📊 Market Analytics Filters")
@@ -181,14 +179,15 @@ if not grid_data.empty:
     avg_tu_cost = flagged_projects['TU_Cost'].mean() if not flagged_projects.empty else 0
     total_projects_flagged = len(flagged_projects)
     
-    # The new sleek, uniform metric bar (Replaces the giant header)
+    # The new sleek, uniform metric bar
+    st.markdown("### 📈 Live Pipeline Financial Overview")
     col_kpi1, col_kpi2, col_kpi3, col_kpi4 = st.columns(4)
-    col_kpi1.metric("Total System Exposure", f"${total_tu_invoiced:,.2f}")
-    col_kpi2.metric("High-Friction Projects", total_projects_flagged)
+    col_kpi1.metric("Total TU Invoice Exposure", f"${total_tu_invoiced:,.2f}")
+    col_kpi2.metric("Projects with TU Exposure", total_projects_flagged)
     col_kpi3.metric("Average Upgrade Invoice", f"${avg_tu_cost:,.2f}")
     
     highest_util = grid_data['Utility Company'].mode()[0] if not grid_data['Utility Company'].empty else "Unknown"
-    col_kpi4.metric("Highest Saturated Utility", highest_util)
+    col_kpi4.metric("Utility with Highest TU Frequency", highest_util)
     st.divider()
 
 # --- TARGET MARKET SELECTION ---
@@ -262,7 +261,7 @@ if not grid_data.empty:
                 folium.CircleMarker(
                     location=[offset_lat, offset_lon],
                     radius=8 if row['TU_Cost'] == 0 else 12,
-                    popup=f"<b>{row['City']} (Cancelled)</b><br>Job: {row['Job Code']}<br>Utility: {row['Utility Company']}<br>Lost Revenue: ${row['TU_Cost']:,.2f}",
+                    popup=f"<b>{row['City']} (Cancelled)</b><br>Job: {row['Job Code']}<br>Utility: {row['Utility Company']}<br>TU Invoice Amount: ${row['TU_Cost']:,.2f}",
                     color=risk_color,
                     fill=True,
                     fill_color=risk_color,
@@ -274,7 +273,7 @@ if not grid_data.empty:
                 folium.CircleMarker(
                     location=[offset_lat, offset_lon],
                     radius=8 if row['TU_Cost'] == 0 else 12,
-                    popup=f"<b>{row['City']} (Active)</b><br>Job: {row['Job Code']}<br>Utility: {row['Utility Company']}<br>Active Risk: ${row['TU_Cost']:,.2f}",
+                    popup=f"<b>{row['City']} (Active)</b><br>Job: {row['Job Code']}<br>Utility: {row['Utility Company']}<br>TU Invoice Amount: ${row['TU_Cost']:,.2f}",
                     color="#ffffff", 
                     fill=True,
                     fill_color=risk_color,
