@@ -11,54 +11,43 @@ st.title("National Grid Resilience & Strategy Dashboard")
 st.markdown("Enterprise pipeline intelligence, capacity mapping, and financial exposure tracking.")
 st.divider()
 
-# --- SIDEBAR: DATA INGESTION & UPLOADS ---
-st.sidebar.header("📂 1. CRM Data Ingestion")
-st.sidebar.caption("Upload exported CRM reports to update pipeline analytics.")
-file_active = st.sidebar.file_uploader("Upload 'Active TU Projects'", type="csv")
-file_cancelled = st.sidebar.file_uploader("Upload 'Cancelled Projects'", type="csv")
-st.sidebar.divider()
-
-# --- THE DYNAMIC DATA INGESTION ENGINE ---
+# --- THE AUTOMATED DATA INGESTION ENGINE ---
 @st.cache_data
-def process_data(f_active, f_cancelled):
+def process_data():
     df_list = []
     
-    # 1. Process Active Projects
-    if f_active is not None:
-        try:
-            df_a = pd.read_csv(f_active)
-            df_a['Status'] = 'Active'
-            if 'Utility' in df_a.columns: df_a = df_a.rename(columns={'Utility': 'Utility Company'})
-            if 'TU Invoice' in df_a.columns: df_a = df_a.rename(columns={'TU Invoice': 'TU_Cost'})
-            df_list.append(df_a)
-        except Exception:
-            st.sidebar.error("Error reading Active CSV.")
+    # 1. Auto-Load Active Projects from GitHub
+    try:
+        df_a = pd.read_csv("active_projects.csv")
+        df_a['Status'] = 'Active'
+        if 'Utility' in df_a.columns: df_a = df_a.rename(columns={'Utility': 'Utility Company'})
+        if 'TU Invoice' in df_a.columns: df_a = df_a.rename(columns={'TU Invoice': 'TU_Cost'})
+        df_list.append(df_a)
+    except FileNotFoundError:
+        pass
 
-    # 2. Process Cancelled Projects
-    if f_cancelled is not None:
-        try:
-            df_c = pd.read_csv(f_cancelled)
-            df_c['Status'] = 'Cancelled'
-            if 'Jurisdiction: Jurisdiction Name' in df_c.columns:
-                df_c['City'] = df_c['Jurisdiction: Jurisdiction Name'].astype(str).str.replace('MA-TOWN ', '', case=False).str.replace('MA-CITY ', '', case=False)
-            if 'TU Invoice Amount:' in df_c.columns: df_c = df_c.rename(columns={'TU Invoice Amount:': 'TU_Cost'})
-            df_list.append(df_c)
-        except Exception:
-            st.sidebar.error("Error reading Cancelled CSV.")
+    # 2. Auto-Load Cancelled Projects from GitHub
+    try:
+        df_c = pd.read_csv("cancelled_projects.csv")
+        df_c['Status'] = 'Cancelled'
+        if 'Jurisdiction: Jurisdiction Name' in df_c.columns:
+            df_c['City'] = df_c['Jurisdiction: Jurisdiction Name'].astype(str).str.replace('MA-TOWN ', '', case=False).str.replace('MA-CITY ', '', case=False)
+        if 'TU Invoice Amount:' in df_c.columns: df_c = df_c.rename(columns={'TU Invoice Amount:': 'TU_Cost'})
+        df_list.append(df_c)
+    except FileNotFoundError:
+        pass
 
     if not df_list:
-        try:
-            df_fallback = pd.read_csv("ma_grid_data.csv")
-            df_fallback['Status'] = 'Legacy Data'
-            if 'Total Cost' in df_fallback.columns: df_fallback = df_fallback.rename(columns={'Total Cost': 'TU_Cost'})
-            df_list.append(df_fallback)
-        except FileNotFoundError:
-            return pd.DataFrame(), []
+        return pd.DataFrame(), []
 
-    # Combine all uploaded files into one Master Ledger
     df_master = pd.concat(df_list, ignore_index=True)
     
-    # --- SANITIZATION ---
+    # --- SANITIZATION & JOB CODE INGESTION ---
+    if 'Job Code' not in df_master.columns:
+        df_master['Job Code'] = "Unknown"
+    else:
+        df_master['Job Code'] = df_master['Job Code'].astype(str).str.strip()
+
     if 'City' not in df_master.columns: df_master['City'] = "Unknown"
     df_master = df_master.dropna(subset=['City'])
     df_master['City'] = df_master['City'].astype(str).str.title().str.strip()
@@ -83,7 +72,7 @@ def process_data(f_active, f_cancelled):
         return u.title()
     df_master['Utility Company'] = df_master['Utility Company'].apply(map_utility)
 
-    # --- PRECISION GEOCODING MA COORDS (With all 31 new cities) ---
+    # --- PRECISION GEOCODING (Master Database Including 59 New Cities) ---
     ma_coords = {
         "Abington": (42.104, -70.945), "Acton": (42.485, -71.432), "Agawam": (42.069, -72.615), "Amesbury": (42.858, -70.930),
         "Amherst": (42.380, -72.523), "Andover": (42.658, -71.136), "Arlington": (42.415, -71.156), "Attleboro": (41.944, -71.283),
@@ -91,7 +80,7 @@ def process_data(f_active, f_cancelled):
         "Billerica": (42.558, -71.268), "Boston": (42.360, -71.058), "Braintree": (42.207, -71.000), "Bridgewater": (41.990, -70.975),
         "Brockton": (42.083, -71.018), "Brookline": (42.331, -71.121), "Burlington": (42.504, -71.195), "Cambridge": (42.373, -71.109),
         "Canton": (42.158, -71.144), "Chelmsford": (42.599, -71.367), "Chelsea": (42.391, -71.032), "Chicopee": (42.148, -72.607),
-        "Dartmouth": (41.626, -70.984), "Dedham": (42.243, -71.167), "East Hampton": (42.266, -72.673), "Easton": (42.029, -71.102),
+        "Dartmouth": (41.626, -70.984), "Dedham": (42.243, -71.167), "Easthampton": (42.266, -72.673), "Easton": (42.029, -71.102),
         "Everett": (42.408, -71.053), "Fall River": (41.701, -71.155), "Falmouth": (41.551, -70.615), "Fitchburg": (42.583, -71.802),
         "Framingham": (42.279, -71.416), "Franklin": (42.083, -71.396), "Gloucester": (42.615, -70.661), "Haverhill": (42.776, -71.077),
         "Holyoke": (42.207, -72.616), "Lawrence": (42.707, -71.163), "Leominster": (42.525, -71.759), "Lexington": (42.447, -71.227),
@@ -107,16 +96,31 @@ def process_data(f_active, f_cancelled):
         "Westfield": (42.120, -72.749), "Weymouth": (42.218, -70.940), "Winchester": (42.452, -71.137), "Woburn": (42.479, -71.152),
         "Worcester": (42.262, -71.802), "Dalton": (42.475, -73.166), "Whitman": (42.081, -70.940), "Millville": (42.039, -71.580),
         "Lee": (42.304, -73.249), "Hadley": (42.341, -72.588), "Southbridge": (42.075, -72.033), "Athol": (42.595, -72.226),
-        "Southampton": (42.227, -72.730), "Lanesborough": (42.518, -73.228), 
-        # NEWLY ADDED 31 CITIES
-        "Francestown": (42.985, -71.815), "Barre": (42.421, -72.106), "Millbury": (42.191, -71.761), "Easthampton": (42.266, -72.673),
-        "South Deerfield": (42.482, -72.604), "Westminster": (42.545, -71.908), "Sutton": (42.150, -71.763), "Lakeville": (41.838, -70.938),
-        "Auburn": (42.193, -71.835), "Avon": (42.131, -71.042), "Rehoboth": (41.840, -71.264), "West Brookfield": (42.235, -72.140),
-        "Turners Falls": (42.604, -72.555), "Ashby": (42.678, -71.819), "Norton": (41.966, -71.186), "Deerfield": (42.543, -72.605),
-        "Wilbraham": (42.122, -72.434), "Feeding Hills": (42.069, -72.678), "Gardner": (42.574, -71.998), "Webster": (42.050, -71.880),
-        "Hopedale": (42.128, -71.539), "Southwick": (42.055, -72.769), "Townsend": (42.668, -71.701), "Whately": (42.430, -72.617),
-        "Becket": (42.332, -73.080), "Monson": (42.104, -72.316), "Hanover": (42.115, -70.826), "Charlton": (42.134, -71.970),
-        "Newburyport": (42.812, -70.877), "West Bridgewater": (42.019, -71.005), "Lunenburg": (42.595, -71.722)
+        "Southampton": (42.227, -72.730), "Lanesborough": (42.518, -73.228), "Francestown": (42.985, -71.815), "Barre": (42.421, -72.106), 
+        "Millbury": (42.191, -71.761), "South Deerfield": (42.482, -72.604), "Westminster": (42.545, -71.908), "Sutton": (42.150, -71.763), 
+        "Lakeville": (41.838, -70.938), "Auburn": (42.193, -71.835), "Avon": (42.131, -71.042), "Rehoboth": (41.840, -71.264), 
+        "West Brookfield": (42.235, -72.140), "Turners Falls": (42.604, -72.555), "Ashby": (42.678, -71.819), "Norton": (41.966, -71.186), 
+        "Deerfield": (42.543, -72.605), "Wilbraham": (42.122, -72.434), "Feeding Hills": (42.069, -72.678), "Gardner": (42.574, -71.998), 
+        "Webster": (42.050, -71.880), "Hopedale": (42.128, -71.539), "Southwick": (42.055, -72.769), "Townsend": (42.668, -71.701), 
+        "Whately": (42.430, -72.617), "Becket": (42.332, -73.080), "Monson": (42.104, -72.316), "Hanover": (42.115, -70.826), 
+        "Charlton": (42.134, -71.970), "Newburyport": (42.812, -70.877), "West Bridgewater": (42.019, -71.005), "Lunenburg": (42.595, -71.722),
+        
+        # --- NEWLY ADDED 59 CITIES ---
+        "Greenfield": (42.587, -72.599), "Montgomery": (42.231, -72.802), "Hinsdale": (42.441, -73.123), "Erving": (42.599, -72.417), 
+        "Longmeadow": (42.049, -72.581), "West Townsend": (42.668, -71.745), "Emmaus": (40.539, -75.496), "Clinton": (42.416, -71.682), 
+        "Dudley": (42.046, -71.931), "Rutland": (42.368, -71.947), "Uxbridge": (42.077, -71.630), "Rockport": (42.655, -70.620), 
+        "Wrentham": (42.066, -71.328), "North Andover": (42.695, -71.133), "Upton": (42.176, -71.627), "Spencer": (42.243, -71.989), 
+        "Sturbridge": (42.108, -72.080), "Leicester": (42.245, -71.905), "Oxford": (42.115, -71.864), "Whitinsville": (42.112, -71.651), 
+        "Shirley": (42.539, -71.648), "Brookfield": (42.215, -72.102), "Northbridge": (42.150, -71.650), "West Newbury": (42.798, -70.992), 
+        "Plainville": (42.002, -71.332), "South Easton": (42.015, -71.096), "Norwell": (42.161, -70.793), "Holbrook": (42.155, -71.008), 
+        "Swansea": (41.746, -71.192), "North Dighton": (41.859, -71.121), "Dighton": (41.819, -71.121), "E Bridgewtr": (42.033, -70.959), 
+        "Woonsocket": (42.002, -71.514), "Mendon": (42.102, -71.554), "Blackstone": (42.016, -71.538), "New Braintree": (42.302, -72.152), 
+        "Douglas": (42.042, -71.743), "North Brookfield": (42.266, -72.082), "Foxboro": (42.065, -71.248), "Pembroke": (42.059, -70.821), 
+        "Westport": (41.621, -71.066), "Scituate": (42.195, -70.726), "Rockland": (42.128, -70.916), "Winchendon": (42.684, -72.046), 
+        "Boyertown": (40.332, -75.635), "Lyndeborough": (42.894, -71.758), "East Lyme": (41.353, -72.222), "Bloomfield Village": (41.826, -72.730), 
+        "Meriden": (41.538, -72.807), "Maynard": (42.433, -71.455), "Otis": (42.193, -73.090), "Bedford": (42.490, -71.276), 
+        "Sandown": (42.926, -71.189), "Jaffrey": (42.813, -72.022), "Rochester": (41.765, -70.925), "E Falmouth": (41.583, -70.551), 
+        "Carver": (41.883, -70.763), "Hyannis": (41.652, -70.282), "Holliston": (42.203, -71.425)
     }
     
     df_master['Lat'] = df_master['City'].apply(lambda c: ma_coords[c][0] if c in ma_coords else None)
@@ -127,12 +131,15 @@ def process_data(f_active, f_cancelled):
     return df_master, missing_cities
 
 # Execute loader
-raw_data, unmapped_cities = process_data(file_active, file_cancelled)
+raw_data, unmapped_cities = process_data()
 
-# --- SIDEBAR: ANALYTICS FILTERS ---
+# --- SIDEBAR: ANALYTICS & SEARCH FILTERS ---
 if not raw_data.empty:
-    st.sidebar.header("🔍 2. Analytics Filters")
+    st.sidebar.header("🔍 Direct Project Search")
+    search_job = st.sidebar.text_input("Enter Job Code (e.g., J-12345)")
+    st.sidebar.divider()
     
+    st.sidebar.header("📊 Market Analytics Filters")
     filter_status = st.sidebar.radio("Project Status", ["All", "Active", "Cancelled"])
     filter_cost = st.sidebar.selectbox("Financial Risk Threshold", [
         "All Projects", 
@@ -140,28 +147,32 @@ if not raw_data.empty:
         "Projects > $10,000", 
         "Projects > $20,000"
     ])
-    
     all_utils = sorted([str(u) for u in raw_data['Utility Company'].unique() if u != 'Unknown Utility'])
     filter_utility = st.sidebar.multiselect("Utility Provider", all_utils, default=all_utils)
 
     # Apply Filters
     grid_data = raw_data.copy()
-    if filter_status != "All":
-        grid_data = grid_data[grid_data['Status'] == filter_status]
-        
-    if filter_cost == "Projects > $0 (Flagged)":
-        grid_data = grid_data[grid_data['TU_Cost'] > 0]
-    elif filter_cost == "Projects > $10,000":
-        grid_data = grid_data[grid_data['TU_Cost'] > 10000]
-    elif filter_cost == "Projects > $20,000":
-        grid_data = grid_data[grid_data['TU_Cost'] > 20000]
-        
-    if filter_utility:
-        grid_data = grid_data[grid_data['Utility Company'].isin(filter_utility)]
+    
+    if search_job:
+        grid_data = grid_data[grid_data['Job Code'].str.contains(search_job, case=False, na=False)]
+        if grid_data.empty:
+            st.sidebar.error(f"Job Code '{search_job}' not found.")
+            grid_data = raw_data.copy() 
+    else:
+        if filter_status != "All":
+            grid_data = grid_data[grid_data['Status'] == filter_status]
+        if filter_cost == "Projects > $0 (Flagged)":
+            grid_data = grid_data[grid_data['TU_Cost'] > 0]
+        elif filter_cost == "Projects > $10,000":
+            grid_data = grid_data[grid_data['TU_Cost'] > 10000]
+        elif filter_cost == "Projects > $20,000":
+            grid_data = grid_data[grid_data['TU_Cost'] > 20000]
+        if filter_utility:
+            grid_data = grid_data[grid_data['Utility Company'].isin(filter_utility)]
 
 else:
     grid_data = pd.DataFrame()
-    st.info("👈 **Awaiting Data:** Please upload your 'Active' or 'Cancelled' CRM reports into the sidebar menu to populate the dashboard.")
+    st.info("🚨 **System Note:** No pipeline data found. Please ensure 'active_projects.csv' and 'cancelled_projects.csv' are uploaded to your GitHub repository.")
 
 # --- PROFESSIONAL FINANCIAL KPI PANEL ---
 if not grid_data.empty:
@@ -170,15 +181,14 @@ if not grid_data.empty:
     avg_tu_cost = flagged_projects['TU_Cost'].mean() if not flagged_projects.empty else 0
     total_projects_flagged = len(flagged_projects)
     
-    # Replaced the red siren error block with a sleek, professional header
-    st.markdown(f"### 📈 Verified Pipeline Financial Exposure: **${total_tu_invoiced:,.2f}**")
-    
-    col_kpi1, col_kpi2, col_kpi3 = st.columns(3)
-    col_kpi1.metric("High-Friction Projects", total_projects_flagged)
-    col_kpi2.metric("Average Upgrade Invoice", f"${avg_tu_cost:,.2f}")
+    # The new sleek, uniform metric bar (Replaces the giant header)
+    col_kpi1, col_kpi2, col_kpi3, col_kpi4 = st.columns(4)
+    col_kpi1.metric("Total System Exposure", f"${total_tu_invoiced:,.2f}")
+    col_kpi2.metric("High-Friction Projects", total_projects_flagged)
+    col_kpi3.metric("Average Upgrade Invoice", f"${avg_tu_cost:,.2f}")
     
     highest_util = grid_data['Utility Company'].mode()[0] if not grid_data['Utility Company'].empty else "Unknown"
-    col_kpi3.metric("Highest Saturated Utility", highest_util)
+    col_kpi4.metric("Highest Saturated Utility", highest_util)
     st.divider()
 
 # --- TARGET MARKET SELECTION ---
@@ -190,8 +200,17 @@ if not grid_data.empty:
     unique_cities = sorted([str(city) for city in grid_data['City'].unique()])
     available_cities += unique_cities
 
+    if search_job and not grid_data.empty:
+        default_city = grid_data.iloc[0]['City']
+        try:
+            city_index = available_cities.index(default_city)
+        except ValueError:
+            city_index = 0
+    else:
+        city_index = 0
+
     with col1:
-        selected_city = st.selectbox("Select Target MA City", available_cities)
+        selected_city = st.selectbox("Select Target MA City", available_cities, index=city_index)
         target_found = selected_city != "Statewide Overview"
 
     with col2:
@@ -208,28 +227,29 @@ if not grid_data.empty:
     st.caption("Active vs. Cancelled overlays based on pipeline filters. (Active = White Border | Cancelled = Dashed Border)")
 
     start_lat, start_lon, start_zoom = 42.25, -71.80, 8
+    
+    if search_job and not grid_data.empty:
+        if pd.notna(grid_data.iloc[0]['Lat']):
+            start_lat, start_lon, start_zoom = grid_data.iloc[0]['Lat'], grid_data.iloc[0]['Lon'], 14
+
     ma_map = folium.Map(location=[start_lat, start_lon], zoom_start=start_zoom, tiles="CartoDB dark_matter")
 
     map_data = grid_data.dropna(subset=['Lat', 'Lon'])
     
     if not map_data.empty:
-        # We group by BOTH City and Status, allowing a city to have an Active and Cancelled marker
-        city_summary = map_data.groupby(['City', 'Status']).agg({
+        city_summary = map_data.groupby(['City', 'Status', 'Job Code']).agg({
             'TU_Cost': 'sum',
             'Utility Company': 'first',
             'Lat': 'first',
             'Lon': 'first'
         }).reset_index()
         
-        # Create map layers for toggling
         fg_active = folium.FeatureGroup(name="Active Projects")
         fg_cancelled = folium.FeatureGroup(name="Cancelled Projects")
         
         for _, row in city_summary.iterrows():
-            # If a city has both Active and Cancelled, we shift the Active dot slightly East so they don't hide each other
-            lon_coord = row['Lon']
-            if row['Status'] == 'Active':
-                lon_coord += 0.005 # ~1000 ft offset
+            offset_lat = row['Lat'] + (hash(row['Job Code']) % 100) / 10000.0
+            offset_lon = row['Lon'] + (hash(row['Job Code'] + "x") % 100) / 10000.0
                 
             if row['TU_Cost'] > 10000:
                 risk_color = "#ff4b4b" 
@@ -238,25 +258,24 @@ if not grid_data.empty:
             else:
                 risk_color = "#00cc66" 
                 
-            # Distinct Styling based on Status
             if row['Status'] == 'Cancelled':
                 folium.CircleMarker(
-                    location=[row['Lat'], lon_coord],
-                    radius=10 if row['TU_Cost'] == 0 else 16,
-                    popup=f"<b>{row['City']} (Cancelled)</b><br>Utility: {row['Utility Company']}<br>Sunk Exposure: ${row['TU_Cost']:,.2f}",
+                    location=[offset_lat, offset_lon],
+                    radius=8 if row['TU_Cost'] == 0 else 12,
+                    popup=f"<b>{row['City']} (Cancelled)</b><br>Job: {row['Job Code']}<br>Utility: {row['Utility Company']}<br>Lost Revenue: ${row['TU_Cost']:,.2f}",
                     color=risk_color,
                     fill=True,
                     fill_color=risk_color,
                     fill_opacity=0.6,
                     weight=3,
-                    dash_array='5, 5' # Dashed border indicates lost project
+                    dash_array='5, 5'
                 ).add_to(fg_cancelled)
             else:
                 folium.CircleMarker(
-                    location=[row['Lat'], lon_coord],
-                    radius=10 if row['TU_Cost'] == 0 else 16,
-                    popup=f"<b>{row['City']} (Active)</b><br>Utility: {row['Utility Company']}<br>Active Exposure: ${row['TU_Cost']:,.2f}",
-                    color="#ffffff", # Crisp white border for active
+                    location=[offset_lat, offset_lon],
+                    radius=8 if row['TU_Cost'] == 0 else 12,
+                    popup=f"<b>{row['City']} (Active)</b><br>Job: {row['Job Code']}<br>Utility: {row['Utility Company']}<br>Active Risk: ${row['TU_Cost']:,.2f}",
+                    color="#ffffff", 
                     fill=True,
                     fill_color=risk_color,
                     fill_opacity=0.9,
@@ -265,9 +284,9 @@ if not grid_data.empty:
 
         fg_active.add_to(ma_map)
         fg_cancelled.add_to(ma_map)
-        folium.LayerControl().add_to(ma_map) # Adds the toggle menu to the map
+        folium.LayerControl().add_to(ma_map) 
 
-    if target_found:
+    if target_found and not search_job:
         target_row = grid_data[grid_data['City'] == selected_city].iloc[0]
         if pd.notna(target_row['Lat']):
             folium.Circle(location=[target_row['Lat'], target_row['Lon']], radius=3000, color="white", weight=3, dash_array='5, 5', fill=False).add_to(ma_map)
@@ -279,7 +298,7 @@ if not grid_data.empty:
         total_kw = existing_kw + new_kw
         is_complex_review = total_kw > 25.0
         
-        city_history = grid_data[grid_data['City'] == selected_city]
+        city_history = raw_data[raw_data['City'] == selected_city]
         historical_exposure = city_history['TU_Cost'].mean() if not city_history.empty else 0
         
         if is_complex_review or historical_exposure > 5000:
