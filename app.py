@@ -40,8 +40,8 @@ def process_data():
             
             if 'Line Item Price to Customer' in df.columns:
                 df['TU_Cost'] = df['Line Item Price to Customer']
-            elif 'TU Invoice Amount:' in df.columns:
-                df['TU_Cost'] = df['TU Invoice Amount:']
+            elif 'TU Invoice:' in df.columns:
+                df['TU_Cost'] = df['TU Invoice:']
             elif 'TU Invoice' in df.columns:
                 df['TU_Cost'] = df['TU Invoice']
             elif 'Total Cost' in df.columns:
