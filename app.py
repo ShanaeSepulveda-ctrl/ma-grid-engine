@@ -11,35 +11,60 @@ st.title("MA Resilience & Strategy Dashboard")
 st.markdown("Enterprise pipeline intelligence, capacity mapping, and financial exposure tracking.")
 st.divider()
 
-# --- THE AUTOMATED DATA INGESTION ENGINE ---
+# --- THE AUTOMATED MASTER INGESTION ENGINE ---
 @st.cache_data
 def process_data():
     df_list = []
     
-    try:
-        df_a = pd.read_csv("active_projects.csv")
-        df_a['Status'] = 'Active'
-        if 'Utility' in df_a.columns: df_a = df_a.rename(columns={'Utility': 'Utility Company'})
-        if 'TU Invoice' in df_a.columns: df_a = df_a.rename(columns={'TU Invoice': 'TU_Cost'})
-        df_list.append(df_a)
-    except FileNotFoundError:
-        pass
-
-    try:
-        df_c = pd.read_csv("cancelled_projects.csv")
-        df_c['Status'] = 'Cancelled'
-        if 'Jurisdiction: Jurisdiction Name' in df_c.columns:
-            df_c['City'] = df_c['Jurisdiction: Jurisdiction Name'].astype(str).str.replace('MA-TOWN ', '', case=False).str.replace('MA-CITY ', '', case=False)
-        if 'TU Invoice Amount:' in df_c.columns: df_c = df_c.rename(columns={'TU Invoice Amount:': 'TU_Cost'})
-        df_list.append(df_c)
-    except FileNotFoundError:
-        pass
+    # The app looks for any of these files in your GitHub repository
+    files_to_try = [
+        ("active_projects.csv", "Open"),
+        ("cancelled_projects.csv", "Cancelled"),
+        ("master_pipeline.csv", "Unknown")
+    ]
+    
+    for filename, default_status in files_to_try:
+        try:
+            df = pd.read_csv(filename)
+            
+            # Safely extract Project Status
+            if 'Project Status:' in df.columns:
+                df['Status'] = df['Project Status:'].astype(str).str.title().str.strip()
+            elif 'Project Status' in df.columns:
+                df['Status'] = df['Project Status'].astype(str).str.title().str.strip()
+            elif 'Status' in df.columns:
+                df['Status'] = df['Status'].astype(str).str.title().str.strip()
+            else:
+                df['Status'] = default_status
+                
+            # Safely extract City
+            if 'Jurisdiction: Jurisdiction Name' in df.columns:
+                df['City'] = df['Jurisdiction: Jurisdiction Name'].astype(str).str.replace('MA-TOWN ', '', case=False).str.replace('MA-CITY ', '', case=False)
+            
+            # Safely extract Cost regardless of the report's column name
+            if 'Line Item Price to Customer' in df.columns:
+                df['TU_Cost'] = df['Line Item Price to Customer']
+            elif 'TU Invoice Amount:' in df.columns:
+                df['TU_Cost'] = df['TU Invoice Amount:']
+            elif 'TU Invoice' in df.columns:
+                df['TU_Cost'] = df['TU Invoice']
+            elif 'Total Cost' in df.columns:
+                df['TU_Cost'] = df['Total Cost']
+            
+            # Safely extract Utility
+            if 'Utility' in df.columns and 'Utility Company' not in df.columns:
+                df['Utility Company'] = df['Utility']
+                
+            df_list.append(df)
+        except FileNotFoundError:
+            pass
 
     if not df_list:
         return pd.DataFrame(), []
 
     df_master = pd.concat(df_list, ignore_index=True)
     
+    # --- SANITIZATION & CLEANING ---
     if 'Job Code' not in df_master.columns:
         df_master['Job Code'] = "Unknown"
     else:
@@ -50,10 +75,12 @@ def process_data():
     df_master['City'] = df_master['City'].astype(str).str.title().str.strip()
     df_master = df_master[df_master['City'].str.lower() != 'nan'] 
     df_master = df_master[df_master['City'] != ''] 
+    
+    df_master['Status'] = df_master['Status'].replace({'Nan': 'Unknown', 'None': 'Unknown'})
 
     if 'TU_Cost' in df_master.columns:
         df_master['TU_Cost'] = df_master['TU_Cost'].astype(str).replace(r'[\$,]', '', regex=True)
-        df_master['TU_Cost'] = pd.to_numeric(df_master['TU_Cost'], errors='coerce').fillna(0)
+        df_master['TU_Cost'] = pd.to_numeric(df_master['TU_Cost'], errors='coerce').fillna(0.0)
     else:
         df_master['TU_Cost'] = 0.0
 
@@ -135,7 +162,12 @@ if not raw_data.empty:
     st.sidebar.divider()
     
     st.sidebar.header("📊 Market Analytics Filters")
-    filter_status = st.sidebar.radio("Project Status", ["All", "Active", "Cancelled"])
+    
+    # DYNAMIC STATUS FILTER: Automatically reads Open, Complete, Cancelled, etc. from your sheet
+    valid_statuses = [s for s in raw_data['Status'].unique() if s not in ['Unknown', 'nan']]
+    available_statuses = ["All"] + sorted(valid_statuses)
+    filter_status = st.sidebar.radio("Project Lifecycle Stage", available_statuses)
+    
     filter_cost = st.sidebar.selectbox("Financial Risk Threshold", [
         "All Projects", 
         "Projects > $0 (Flagged)", 
@@ -167,7 +199,7 @@ if not raw_data.empty:
 
 else:
     grid_data = pd.DataFrame()
-    st.info("🚨 **System Note:** No pipeline data found. Please ensure 'active_projects.csv' and 'cancelled_projects.csv' are uploaded to your GitHub repository.")
+    st.info("🚨 **System Note:** No pipeline data found. Please ensure your CSV files are uploaded to your GitHub repository.")
 
 # --- PROFESSIONAL FINANCIAL KPI PANEL ---
 if not grid_data.empty:
@@ -215,10 +247,10 @@ if not grid_data.empty:
         with c_b:
             new_kw = st.number_input("New System Capacity (kW AC)", min_value=0.0, max_value=50.0, value=10.0, step=0.5)
 
-    # --- THE DUAL-LAYER MAP ENGINE ---
+    # --- THE MULTI-LAYER MAP ENGINE ---
     st.divider()
     st.subheader("🗺️ Enterprise Saturation Map")
-    st.caption("Active vs. Cancelled overlays based on pipeline filters. (Active = White Border | Cancelled = Dashed Border)")
+    st.caption("Map updates dynamically based on Status Filter. Open = White | Complete = Silver | Cancelled = Dashed")
 
     start_lat, start_lon, start_zoom = 42.25, -71.80, 8
     
@@ -238,8 +270,9 @@ if not grid_data.empty:
             'Lon': 'first'
         }).reset_index()
         
-        fg_active = folium.FeatureGroup(name="Active Projects")
-        fg_cancelled = folium.FeatureGroup(name="Cancelled Projects")
+        # Creates a unique toggle layer for whatever statuses are present!
+        statuses_present = city_summary['Status'].unique()
+        feature_groups = {s: folium.FeatureGroup(name=f"{s} Projects") for s in statuses_present}
         
         for _, row in city_summary.iterrows():
             offset_lat = row['Lat'] + (hash(row['Job Code']) % 100) / 10000.0
@@ -252,32 +285,34 @@ if not grid_data.empty:
             else:
                 risk_color = "#00cc66" 
                 
+            # MAP STYLING LOGIC
             if row['Status'] == 'Cancelled':
-                folium.CircleMarker(
-                    location=[offset_lat, offset_lon],
-                    radius=8 if row['TU_Cost'] == 0 else 12,
-                    popup=f"<b>{row['City']} (Cancelled)</b><br>Job: {row['Job Code']}<br>Utility: {row['Utility Company']}<br>TU Invoice Amount: ${row['TU_Cost']:,.2f}",
-                    color=risk_color,
-                    fill=True,
-                    fill_color=risk_color,
-                    fill_opacity=0.6,
-                    weight=3,
-                    dash_array='5, 5'
-                ).add_to(fg_cancelled)
+                border_color = risk_color
+                weight = 3
+                dash = '5, 5'
+            elif row['Status'] == 'Complete':
+                border_color = "#a9a9a9" # Silver border for Complete
+                weight = 2
+                dash = None
             else:
-                folium.CircleMarker(
-                    location=[offset_lat, offset_lon],
-                    radius=8 if row['TU_Cost'] == 0 else 12,
-                    popup=f"<b>{row['City']} (Active)</b><br>Job: {row['Job Code']}<br>Utility: {row['Utility Company']}<br>Active Risk: ${row['TU_Cost']:,.2f}",
-                    color="#ffffff", 
-                    fill=True,
-                    fill_color=risk_color,
-                    fill_opacity=0.9,
-                    weight=2
-                ).add_to(fg_active)
+                border_color = "#ffffff" # White border for Open/Active
+                weight = 2
+                dash = None
+                
+            folium.CircleMarker(
+                location=[offset_lat, offset_lon],
+                radius=8 if row['TU_Cost'] == 0 else 12,
+                popup=f"<b>{row['City']} ({row['Status']})</b><br>Job: {row['Job Code']}<br>Utility: {row['Utility Company']}<br>TU Invoice Amount: ${row['TU_Cost']:,.2f}",
+                color=border_color,
+                fill=True,
+                fill_color=risk_color,
+                fill_opacity=0.8,
+                weight=weight,
+                dash_array=dash
+            ).add_to(feature_groups[row['Status']])
 
-        fg_active.add_to(ma_map)
-        fg_cancelled.add_to(ma_map)
+        for fg in feature_groups.values():
+            fg.add_to(ma_map)
         folium.LayerControl().add_to(ma_map) 
 
     if target_found and not search_job:
@@ -314,7 +349,6 @@ if not grid_data.empty:
         col_b.metric("CX/Sales: Expected Approval Timeline", timeline_status)
         col_c.metric("Finance: Est. Sunk Margin Risk", f"${historical_exposure + 2000:,.0f}" if historical_exposure > 0 else "$2,000", "High Risk" if risk_level == "Red" else "Acceptable", delta_color="inverse")
 
-        # THE UNIFIED LOGIC TABS
         tab_cx, tab_design, tab_policy = st.tabs(["🤝 Sales & CX Actions", "📐 Design Engineering Actions", "🏛️ Policy & Exec Actions"])
         
         with tab_cx:
@@ -326,7 +360,6 @@ if not grid_data.empty:
                 st.success("**Clearance Zone:** Green light for standard sales pitch. Expect rapid 1-2 week utility approvals.")
                 
         with tab_design:
-            # The Logic Upgrade: Accounts for both System Size AND Geographic Saturation
             if is_complex_review:
                 st.error(f"**System Modification Recommended:** Parcel AC ({total_kw}kW) exceeds the 25kW Simplified Track limit. Evaluate Power Control Systems (PCS) to hard-cap export below 25kW, or configure ESS for non-export to bypass Complex Study queues.")
             elif risk_level == "Red":
