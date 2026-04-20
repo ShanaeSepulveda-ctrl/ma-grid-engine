@@ -176,7 +176,9 @@ if not raw_data.empty:
         "All Projects", 
         "Projects > $0 (Flagged)", 
         "Projects > $10,000", 
-        "Projects > $20,000"
+        "Projects > $20,000",
+        "Projects > $30,000",
+        "Projects > $40,000"
     ])
     
     all_utils = sorted([str(u) for u in raw_data['Utility Company'].unique() if u != 'Unknown Utility'])
