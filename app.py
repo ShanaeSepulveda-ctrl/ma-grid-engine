@@ -16,7 +16,6 @@ st.divider()
 def process_data():
     df_list = []
     
-    # The app looks for any of these files in your GitHub repository
     files_to_try = [
         ("active_projects.csv", "Open"),
         ("cancelled_projects.csv", "Cancelled"),
@@ -27,7 +26,6 @@ def process_data():
         try:
             df = pd.read_csv(filename)
             
-            # Safely extract Project Status
             if 'Project Status:' in df.columns:
                 df['Status'] = df['Project Status:'].astype(str).str.title().str.strip()
             elif 'Project Status' in df.columns:
@@ -37,23 +35,26 @@ def process_data():
             else:
                 df['Status'] = default_status
                 
-            # Safely extract City
             if 'Jurisdiction: Jurisdiction Name' in df.columns:
                 df['City'] = df['Jurisdiction: Jurisdiction Name'].astype(str).str.replace('MA-TOWN ', '', case=False).str.replace('MA-CITY ', '', case=False)
             
-            # Safely extract Cost regardless of the report's column name
             if 'Line Item Price to Customer' in df.columns:
                 df['TU_Cost'] = df['Line Item Price to Customer']
-            elif 'TU Invoice:' in df.columns:
-                df['TU_Cost'] = df['TU Invoice:']
+            elif 'TU Invoice Amount:' in df.columns:
+                df['TU_Cost'] = df['TU Invoice Amount:']
             elif 'TU Invoice' in df.columns:
                 df['TU_Cost'] = df['TU Invoice']
             elif 'Total Cost' in df.columns:
                 df['TU_Cost'] = df['Total Cost']
             
-            # Safely extract Utility
             if 'Utility' in df.columns and 'Utility Company' not in df.columns:
                 df['Utility Company'] = df['Utility']
+                
+            # Safely capture the BrightBox / Battery Column
+            if 'BrightBox' in df.columns:
+                df['Battery'] = df['BrightBox'].astype(str).str.upper().isin(['TRUE', 'YES', 'Y', '1'])
+            else:
+                df['Battery'] = False
                 
             df_list.append(df)
         except FileNotFoundError:
@@ -77,6 +78,8 @@ def process_data():
     df_master = df_master[df_master['City'] != ''] 
     
     df_master['Status'] = df_master['Status'].replace({'Nan': 'Unknown', 'None': 'Unknown'})
+    
+    if 'Battery' not in df_master.columns: df_master['Battery'] = False
 
     if 'TU_Cost' in df_master.columns:
         df_master['TU_Cost'] = df_master['TU_Cost'].astype(str).replace(r'[\$,]', '', regex=True)
@@ -163,10 +166,11 @@ if not raw_data.empty:
     
     st.sidebar.header("📊 Market Analytics Filters")
     
-    # DYNAMIC STATUS FILTER: Automatically reads Open, Complete, Cancelled, etc. from your sheet
     valid_statuses = [s for s in raw_data['Status'].unique() if s not in ['Unknown', 'nan']]
     available_statuses = ["All"] + sorted(valid_statuses)
     filter_status = st.sidebar.radio("Project Lifecycle Stage", available_statuses)
+    
+    filter_battery = st.sidebar.radio("System Design Type", ["All Systems", "Battery Included", "Solar Only"])
     
     filter_cost = st.sidebar.selectbox("Financial Risk Threshold", [
         "All Projects", 
@@ -174,6 +178,7 @@ if not raw_data.empty:
         "Projects > $10,000", 
         "Projects > $20,000"
     ])
+    
     all_utils = sorted([str(u) for u in raw_data['Utility Company'].unique() if u != 'Unknown Utility'])
     filter_utility = st.sidebar.multiselect("Utility Provider", all_utils, default=all_utils)
 
@@ -188,6 +193,10 @@ if not raw_data.empty:
     else:
         if filter_status != "All":
             grid_data = grid_data[grid_data['Status'] == filter_status]
+        if filter_battery == "Battery Included":
+            grid_data = grid_data[grid_data['Battery'] == True]
+        elif filter_battery == "Solar Only":
+            grid_data = grid_data[grid_data['Battery'] == False]
         if filter_cost == "Projects > $0 (Flagged)":
             grid_data = grid_data[grid_data['TU_Cost'] > 0]
         elif filter_cost == "Projects > $10,000":
@@ -250,7 +259,7 @@ if not grid_data.empty:
     # --- THE MULTI-LAYER MAP ENGINE ---
     st.divider()
     st.subheader("🗺️ Enterprise Saturation Map")
-    st.caption("Map updates dynamically based on Status Filter. Open = White | Complete = Silver | Cancelled = Dashed")
+    st.caption("Map updates dynamically based on Status Filter. Open = White | Complete = Vibrant Blue | Cancelled = Dashed")
 
     start_lat, start_lon, start_zoom = 42.25, -71.80, 8
     
@@ -266,11 +275,11 @@ if not grid_data.empty:
         city_summary = map_data.groupby(['City', 'Status', 'Job Code']).agg({
             'TU_Cost': 'sum',
             'Utility Company': 'first',
+            'Battery': 'first',
             'Lat': 'first',
             'Lon': 'first'
         }).reset_index()
         
-        # Creates a unique toggle layer for whatever statuses are present!
         statuses_present = city_summary['Status'].unique()
         feature_groups = {s: folium.FeatureGroup(name=f"{s} Projects") for s in statuses_present}
         
@@ -285,24 +294,27 @@ if not grid_data.empty:
             else:
                 risk_color = "#00cc66" 
                 
-            # MAP STYLING LOGIC
+            # THE UPGRADED MAP STYLING LOGIC
             if row['Status'] == 'Cancelled':
                 border_color = risk_color
                 weight = 3
                 dash = '5, 5'
             elif row['Status'] == 'Complete':
-                border_color = "#a9a9a9" # Silver border for Complete
-                weight = 2
+                border_color = "#00a8ff" # Vibrant Sapphire Blue for Complete!
+                weight = 3
                 dash = None
             else:
-                border_color = "#ffffff" # White border for Open/Active
+                border_color = "#ffffff" # Crisp White for Open
                 weight = 2
                 dash = None
+                
+            # The Battery Badge Logic
+            battery_badge = "<br><b>🔋 Includes Battery Storage</b>" if row['Battery'] else ""
                 
             folium.CircleMarker(
                 location=[offset_lat, offset_lon],
                 radius=8 if row['TU_Cost'] == 0 else 12,
-                popup=f"<b>{row['City']} ({row['Status']})</b><br>Job: {row['Job Code']}<br>Utility: {row['Utility Company']}<br>TU Invoice Amount: ${row['TU_Cost']:,.2f}",
+                popup=f"<b>{row['City']} ({row['Status']})</b><br>Job: {row['Job Code']}<br>Utility: {row['Utility Company']}<br>TU Invoice Amount: ${row['TU_Cost']:,.2f}{battery_badge}",
                 color=border_color,
                 fill=True,
                 fill_color=risk_color,
@@ -341,13 +353,22 @@ if not grid_data.empty:
             risk_level = "Green"
 
         st.divider()
-        st.subheader("2. Cross-Functional Strategy Matrix")
-        st.caption(f"Actionable intelligence for {selected_city} based on current risk profile.")
+        st.subheader("2. Capacity & Expectation Diagnostics")
         
         col_a, col_b, col_c = st.columns(3)
         col_a.metric("Design: Total Parcel AC", f"{total_kw} kW", "- Complex Review Triggered" if is_complex_review else "+ Simplified Track", delta_color="inverse")
         col_b.metric("CX/Sales: Expected Approval Timeline", timeline_status)
         col_c.metric("Finance: Est. Sunk Margin Risk", f"${historical_exposure + 2000:,.0f}" if historical_exposure > 0 else "$2,000", "High Risk" if risk_level == "Red" else "Acceptable", delta_color="inverse")
+
+        # THE CALCULATION METHODOLOGY EXPANDER (Re-added per your request!)
+        with st.expander("📊 Defensible Data Methodology (Analyst Notes)"):
+            st.markdown("""
+            **How is Est. Sunk Margin Risk Calculated?**
+            * **Baseline Sunk OpEx:** `$2,000` (Estimated standard Site Survey + Design Labor + CX Admin execution cost).
+            * **Transformer Upgrade (TU) Exposure:** Derived directly from the historical pipeline data average for this specific geographic location.
+            * **Formula:** `Historical Local TU Average + Baseline Sunk OpEx = Est. Sunk Margin Risk`.
+            * *Note on Timelines:* Exact day-counts have been replaced by structural regulatory stages (e.g., 'Complex Study') to ensure realistic, defensible expectations are set cross-functionally.
+            """)
 
         tab_cx, tab_design, tab_policy = st.tabs(["🤝 Sales & CX Actions", "📐 Design Engineering Actions", "🏛️ Policy & Exec Actions"])
         
