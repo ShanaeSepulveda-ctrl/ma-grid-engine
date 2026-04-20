@@ -40,8 +40,8 @@ def process_data():
             
             if 'Line Item Price to Customer' in df.columns:
                 df['TU_Cost'] = df['Line Item Price to Customer']
-            elif 'TU Invoice:' in df.columns:
-                df['TU_Cost'] = df['TU Invoice:']
+            elif 'TU Invoice Amount:' in df.columns:
+                df['TU_Cost'] = df['TU Invoice Amount:']
             elif 'TU Invoice' in df.columns:
                 df['TU_Cost'] = df['TU Invoice']
             elif 'Total Cost' in df.columns:
@@ -172,13 +172,14 @@ if not raw_data.empty:
     
     filter_battery = st.sidebar.radio("System Design Type", ["All Systems", "Battery Included", "Solar Only"])
     
+    # UPDATED: Added $30,000 and $40,000 thresholds
     filter_cost = st.sidebar.selectbox("Financial Risk Threshold", [
         "All Projects", 
         "Projects > $0 (Flagged)", 
         "Projects > $10,000", 
         "Projects > $20,000",
         "Projects > $30,000",
-        "Projects > $40,000",
+        "Projects > $40,000"
     ])
     
     all_utils = sorted([str(u) for u in raw_data['Utility Company'].unique() if u != 'Unknown Utility'])
@@ -199,12 +200,19 @@ if not raw_data.empty:
             grid_data = grid_data[grid_data['Battery'] == True]
         elif filter_battery == "Solar Only":
             grid_data = grid_data[grid_data['Battery'] == False]
+        
+        # UPDATED: Filtering logic for new high-tier thresholds
         if filter_cost == "Projects > $0 (Flagged)":
             grid_data = grid_data[grid_data['TU_Cost'] > 0]
         elif filter_cost == "Projects > $10,000":
             grid_data = grid_data[grid_data['TU_Cost'] > 10000]
         elif filter_cost == "Projects > $20,000":
             grid_data = grid_data[grid_data['TU_Cost'] > 20000]
+        elif filter_cost == "Projects > $30,000":
+            grid_data = grid_data[grid_data['TU_Cost'] > 30000]
+        elif filter_cost == "Projects > $40,000":
+            grid_data = grid_data[grid_data['TU_Cost'] > 40000]
+            
         if filter_utility:
             grid_data = grid_data[grid_data['Utility Company'].isin(filter_utility)]
 
@@ -296,21 +304,19 @@ if not grid_data.empty:
             else:
                 risk_color = "#00cc66" 
                 
-            # THE UPGRADED MAP STYLING LOGIC
             if row['Status'] == 'Cancelled':
                 border_color = risk_color
                 weight = 3
                 dash = '5, 5'
             elif row['Status'] == 'Complete':
-                border_color = "#00a8ff" # Vibrant Sapphire Blue for Complete!
+                border_color = "#00a8ff" 
                 weight = 3
                 dash = None
             else:
-                border_color = "#ffffff" # Crisp White for Open
+                border_color = "#ffffff" 
                 weight = 2
                 dash = None
                 
-            # The Battery Badge Logic
             battery_badge = "<br><b>🔋 Includes Battery Storage</b>" if row['Battery'] else ""
                 
             folium.CircleMarker(
@@ -362,7 +368,6 @@ if not grid_data.empty:
         col_b.metric("CX/Sales: Expected Approval Timeline", timeline_status)
         col_c.metric("Finance: Est. Sunk Margin Risk", f"${historical_exposure + 2000:,.0f}" if historical_exposure > 0 else "$2,000", "High Risk" if risk_level == "Red" else "Acceptable", delta_color="inverse")
 
-        # THE CALCULATION METHODOLOGY EXPANDER (Re-added per your request!)
         with st.expander("📊 Defensible Data Methodology (Analyst Notes)"):
             st.markdown("""
             **How is Est. Sunk Margin Risk Calculated?**
