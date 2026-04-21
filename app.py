@@ -26,6 +26,7 @@ def process_data():
         try:
             df = pd.read_csv(filename)
             
+            # Status Extraction
             if 'Project Status:' in df.columns:
                 df['Status'] = df['Project Status:'].astype(str).str.title().str.strip()
             elif 'Project Status' in df.columns:
@@ -35,9 +36,11 @@ def process_data():
             else:
                 df['Status'] = default_status
                 
+            # City Extraction
             if 'Jurisdiction: Jurisdiction Name' in df.columns:
                 df['City'] = df['Jurisdiction: Jurisdiction Name'].astype(str).str.replace('MA-TOWN ', '', case=False).str.replace('MA-CITY ', '', case=False)
             
+            # Cost Extraction
             if 'Line Item Price to Customer' in df.columns:
                 df['TU_Cost'] = df['Line Item Price to Customer']
             elif 'TU Invoice:' in df.columns:
@@ -47,14 +50,17 @@ def process_data():
             elif 'Total Cost' in df.columns:
                 df['TU_Cost'] = df['Total Cost']
             
+            # Utility Extraction
             if 'Utility' in df.columns and 'Utility Company' not in df.columns:
                 df['Utility Company'] = df['Utility']
                 
+            # Zip Code Extraction
             if 'Zip Code:' in df.columns:
                 df['Zip Code'] = df['Zip Code:']
             elif 'Zip Code' not in df.columns:
                 df['Zip Code'] = "Unknown"
                 
+            # Battery Extraction
             if 'BrightBox' in df.columns:
                 df['Battery'] = df['BrightBox'].astype(str).str.upper().isin(['TRUE', 'YES', 'Y', '1'])
             else:
@@ -71,6 +77,8 @@ def process_data():
     
     # --- SANITIZATION & CLEANING ---
     df_master['Job Code'] = df_master['Job Code'].astype(str).str.strip() if 'Job Code' in df_master.columns else "Unknown"
+    
+    # Zip Code Sanitization
     df_master['Zip Code'] = df_master['Zip Code'].astype(str).str.extract(r'(\d{5})')[0].fillna("Unknown")
 
     if 'City' not in df_master.columns: df_master['City'] = "Unknown"
@@ -80,6 +88,7 @@ def process_data():
     df_master = df_master[df_master['City'] != ''] 
     
     df_master['Status'] = df_master['Status'].replace({'Nan': 'Unknown', 'None': 'Unknown'})
+    
     if 'Battery' not in df_master.columns: df_master['Battery'] = False
 
     if 'TU_Cost' in df_master.columns:
@@ -204,6 +213,7 @@ if not raw_data.empty:
             grid_data = grid_data[grid_data['Battery'] == True]
         elif filter_battery == "Solar Only":
             grid_data = grid_data[grid_data['Battery'] == False]
+        
         if filter_cost == "Projects > $0 (Flagged)":
             grid_data = grid_data[grid_data['TU_Cost'] > 0]
         elif filter_cost == "Projects > $10,000":
@@ -214,6 +224,7 @@ if not raw_data.empty:
             grid_data = grid_data[grid_data['TU_Cost'] > 30000]
         elif filter_cost == "Projects > $40,000":
             grid_data = grid_data[grid_data['TU_Cost'] > 40000]
+            
         if filter_utility:
             grid_data = grid_data[grid_data['Utility Company'].isin(filter_utility)]
 
@@ -237,10 +248,10 @@ if not grid_data.empty:
     col_kpi4.metric("Utility with Highest TU Frequency", highest_util)
     st.divider()
 
-# --- THE MULTI-LAYER MAP ENGINE ---
+# --- THE MULTI-LAYER HOVER MAP ENGINE ---
 if not grid_data.empty:
     st.subheader("🗺️ Enterprise Saturation Map")
-    st.caption("Map updates dynamically. Open = White | Complete = Sapphire Blue | Cancelled = Dashed")
+    st.caption("Map updates dynamically. Open = White | Complete = Sapphire Blue | Cancelled = Dashed. **Hover over dots for project data.**")
 
     # Map Targeting Logic
     start_lat, start_lon, start_zoom = 42.25, -71.80, 8
@@ -292,11 +303,15 @@ if not grid_data.empty:
                 dash = None
                 
             battery_badge = "<br><b>🔋 Includes Battery Storage</b>" if row['Battery'] else ""
+            
+            # The Formatted Data String
+            hover_text = f"<b>{row['City']}, MA {row['Zip Code']} ({row['Status']})</b><br>Job: {row['Job Code']}<br>Utility: {row['Utility Company']}<br>TU Invoice Amount: ${row['TU_Cost']:,.2f}{battery_badge}"
                 
             folium.CircleMarker(
                 location=[offset_lat, offset_lon],
                 radius=8 if row['TU_Cost'] == 0 else 12,
-                popup=f"<b>{row['City']}, MA {row['Zip Code']} ({row['Status']})</b><br>Job: {row['Job Code']}<br>Utility: {row['Utility Company']}<br>TU Invoice Amount: ${row['TU_Cost']:,.2f}{battery_badge}",
+                tooltip=hover_text,  # INSTANT HOVER POPUP
+                popup=hover_text,    # KEEPS IT LOCKED IF CLICKED
                 color=border_color,
                 fill=True,
                 fill_color=risk_color,
@@ -309,23 +324,27 @@ if not grid_data.empty:
             fg.add_to(ma_map)
         folium.LayerControl().add_to(ma_map) 
 
-    # --- THE RADAR LOCK RETICLE ---
+    # --- THE "GHOSTED" RADAR LOCK RETICLE ---
     # Drops a distinct red pin *only* if the search didn't fail
     if universal_search and not search_failed and not map_data.empty:
         target_row = map_data.iloc[0]
+        
+        # The center pin to identify the search target
         folium.Marker(
             location=[target_row['Lat'], target_row['Lon']],
-            icon=folium.Icon(color='red', icon='info-sign'),
-            tooltip="Targeted Search Area"
+            icon=folium.Icon(color='red', icon='star'),
+            tooltip=f"🎯 Target Lock: {target_row['City']}"
         ).add_to(ma_map)
         
+        # The Radar Ring (Now interactive=False so your mouse passes right through it!)
         folium.Circle(
             location=[target_row['Lat'], target_row['Lon']],
             radius=1500,
             color="#ff4b4b",
             weight=3,
             fill=True,
-            fill_opacity=0.1
+            fill_opacity=0.1,
+            interactive=False  # THE MAGIC Z-INDEX FIX
         ).add_to(ma_map)
 
     st_folium(ma_map, width=1200, height=550, returned_objects=[])
