@@ -26,6 +26,7 @@ def process_data():
         try:
             df = pd.read_csv(filename)
             
+            # Status Extraction
             if 'Project Status:' in df.columns:
                 df['Status'] = df['Project Status:'].astype(str).str.title().str.strip()
             elif 'Project Status' in df.columns:
@@ -35,9 +36,11 @@ def process_data():
             else:
                 df['Status'] = default_status
                 
+            # City Extraction
             if 'Jurisdiction: Jurisdiction Name' in df.columns:
                 df['City'] = df['Jurisdiction: Jurisdiction Name'].astype(str).str.replace('MA-TOWN ', '', case=False).str.replace('MA-CITY ', '', case=False)
             
+            # Cost Extraction
             if 'Line Item Price to Customer' in df.columns:
                 df['TU_Cost'] = df['Line Item Price to Customer']
             elif 'TU Invoice:' in df.columns:
@@ -47,14 +50,17 @@ def process_data():
             elif 'Total Cost' in df.columns:
                 df['TU_Cost'] = df['Total Cost']
             
+            # Utility Extraction
             if 'Utility' in df.columns and 'Utility Company' not in df.columns:
                 df['Utility Company'] = df['Utility']
                 
+            # Zip Code Extraction
             if 'Zip Code:' in df.columns:
                 df['Zip Code'] = df['Zip Code:']
             elif 'Zip Code' not in df.columns:
                 df['Zip Code'] = "Unknown"
                 
+            # Battery Extraction
             if 'BrightBox' in df.columns:
                 df['Battery'] = df['BrightBox'].astype(str).str.upper().isin(['TRUE', 'YES', 'Y', '1'])
             else:
@@ -69,8 +75,24 @@ def process_data():
 
     df_master = pd.concat(df_list, ignore_index=True)
     
+    # --- SANITIZATION & CLEANING ---
     df_master['Job Code'] = df_master['Job Code'].astype(str).str.strip() if 'Job Code' in df_master.columns else "Unknown"
-    df_master['Zip Code'] = df_master['Zip Code'].astype(str).str.extract(r'(\d{5})')[0].fillna("Unknown")
+    
+    # THE SMART ZIP CODE PARSER (Fixes the New England leading-zero bug)
+    def clean_zip(z):
+        # Convert to string and drop decimal if pandas read it as float (e.g., 2108.0)
+        z_str = str(z).split('.')[0] 
+        # Extract only the numeric digits
+        digits = ''.join(filter(str.isdigit, z_str))
+        
+        if len(digits) == 4:
+            return "0" + digits # Re-attach the missing MA zero
+        elif len(digits) >= 5:
+            return digits[:5] # Keep clean 5-digit zips
+        else:
+            return "Unknown"
+            
+    df_master['Zip Code'] = df_master['Zip Code'].apply(clean_zip)
 
     if 'City' not in df_master.columns: df_master['City'] = "Unknown"
     df_master = df_master.dropna(subset=['City'])
@@ -79,6 +101,7 @@ def process_data():
     df_master = df_master[df_master['City'] != ''] 
     
     df_master['Status'] = df_master['Status'].replace({'Nan': 'Unknown', 'None': 'Unknown'})
+    
     if 'Battery' not in df_master.columns: df_master['Battery'] = False
 
     if 'TU_Cost' in df_master.columns:
@@ -98,6 +121,7 @@ def process_data():
         return u.title()
     df_master['Utility Company'] = df_master['Utility Company'].apply(map_utility)
 
+    # --- PRECISION GEOCODING (Master Database) ---
     ma_coords = {
         "Abington": (42.104, -70.945), "Acton": (42.485, -71.432), "Agawam": (42.069, -72.615), "Amesbury": (42.858, -70.930),
         "Amherst": (42.380, -72.523), "Andover": (42.658, -71.136), "Arlington": (42.415, -71.156), "Attleboro": (41.944, -71.283),
@@ -276,6 +300,7 @@ if not grid_data.empty:
             else:
                 risk_color = "#00cc66" 
                 
+            # Styling Logic
             if row['Status'] == 'Cancelled':
                 border_color = risk_color
                 weight = 3
