@@ -26,7 +26,6 @@ def process_data():
         try:
             df = pd.read_csv(filename)
             
-            # Status Extraction
             if 'Project Status:' in df.columns:
                 df['Status'] = df['Project Status:'].astype(str).str.title().str.strip()
             elif 'Project Status' in df.columns:
@@ -36,31 +35,26 @@ def process_data():
             else:
                 df['Status'] = default_status
                 
-            # City Extraction
             if 'Jurisdiction: Jurisdiction Name' in df.columns:
                 df['City'] = df['Jurisdiction: Jurisdiction Name'].astype(str).str.replace('MA-TOWN ', '', case=False).str.replace('MA-CITY ', '', case=False)
             
-            # Cost Extraction
             if 'Line Item Price to Customer' in df.columns:
                 df['TU_Cost'] = df['Line Item Price to Customer']
-            elif 'TU Invoice:' in df.columns:
-                df['TU_Cost'] = df['TU Invoice:']
+            elif 'TU Invoice Amount:' in df.columns:
+                df['TU_Cost'] = df['TU Invoice Amount:']
             elif 'TU Invoice' in df.columns:
                 df['TU_Cost'] = df['TU Invoice']
             elif 'Total Cost' in df.columns:
                 df['TU_Cost'] = df['Total Cost']
             
-            # Utility Extraction
             if 'Utility' in df.columns and 'Utility Company' not in df.columns:
                 df['Utility Company'] = df['Utility']
                 
-            # Zip Code Extraction
             if 'Zip Code:' in df.columns:
                 df['Zip Code'] = df['Zip Code:']
             elif 'Zip Code' not in df.columns:
                 df['Zip Code'] = "Unknown"
                 
-            # Battery Extraction
             if 'BrightBox' in df.columns:
                 df['Battery'] = df['BrightBox'].astype(str).str.upper().isin(['TRUE', 'YES', 'Y', '1'])
             else:
@@ -77,8 +71,6 @@ def process_data():
     
     # --- SANITIZATION & CLEANING ---
     df_master['Job Code'] = df_master['Job Code'].astype(str).str.strip() if 'Job Code' in df_master.columns else "Unknown"
-    
-    # Zip Code Sanitization
     df_master['Zip Code'] = df_master['Zip Code'].astype(str).str.extract(r'(\d{5})')[0].fillna("Unknown")
 
     if 'City' not in df_master.columns: df_master['City'] = "Unknown"
@@ -88,7 +80,6 @@ def process_data():
     df_master = df_master[df_master['City'] != ''] 
     
     df_master['Status'] = df_master['Status'].replace({'Nan': 'Unknown', 'None': 'Unknown'})
-    
     if 'Battery' not in df_master.columns: df_master['Battery'] = False
 
     if 'TU_Cost' in df_master.columns:
@@ -170,18 +161,14 @@ raw_data, unmapped_cities = process_data()
 # --- SIDEBAR: THE UNIVERSAL SMART SEARCH ---
 if not raw_data.empty:
     st.sidebar.header("🔍 Universal Pipeline Search")
-    # Clean, concise search bar that takes any format
     universal_search = st.sidebar.text_input("Search by Job Code, City, or Zip Code:", placeholder="e.g., 221R-057, Boston, 02108")
     st.sidebar.divider()
     
     st.sidebar.header("📊 Market Analytics Filters")
-    
     valid_statuses = [s for s in raw_data['Status'].unique() if s not in ['Unknown', 'nan']]
     available_statuses = ["All"] + sorted(valid_statuses)
     filter_status = st.sidebar.radio("Project Lifecycle Stage", available_statuses)
-    
     filter_battery = st.sidebar.radio("System Design Type", ["All Systems", "Battery Included", "Solar Only"])
-    
     filter_cost = st.sidebar.selectbox("Financial Risk Threshold", [
         "All Projects", 
         "Projects > $0 (Flagged)", 
@@ -190,25 +177,26 @@ if not raw_data.empty:
         "Projects > $30,000",
         "Projects > $40,000"
     ])
-    
     all_utils = sorted([str(u) for u in raw_data['Utility Company'].unique() if u != 'Unknown Utility'])
     filter_utility = st.sidebar.multiselect("Utility Provider", all_utils, default=all_utils)
 
     # --- APPLY FILTERS ---
     grid_data = raw_data.copy()
+    search_failed = False
     
     if universal_search:
         search_term = universal_search.lower().strip()
-        # Smart matching across three columns
         mask = (
             grid_data['Job Code'].str.lower().str.contains(search_term, na=False) |
             grid_data['City'].str.lower().str.contains(search_term, na=False) |
             grid_data['Zip Code'].str.contains(search_term, na=False)
         )
         grid_data = grid_data[mask]
+        
         if grid_data.empty:
-            st.sidebar.error(f"No results found for '{universal_search}'.")
-            grid_data = raw_data.copy() # Reset if not found so the map doesn't break
+            st.sidebar.error(f"No pipeline results found for '{universal_search}'.")
+            grid_data = raw_data.copy() # Reset safely so the state view returns
+            search_failed = True
     else:
         if filter_status != "All":
             grid_data = grid_data[grid_data['Status'] == filter_status]
@@ -216,7 +204,6 @@ if not raw_data.empty:
             grid_data = grid_data[grid_data['Battery'] == True]
         elif filter_battery == "Solar Only":
             grid_data = grid_data[grid_data['Battery'] == False]
-        
         if filter_cost == "Projects > $0 (Flagged)":
             grid_data = grid_data[grid_data['TU_Cost'] > 0]
         elif filter_cost == "Projects > $10,000":
@@ -227,7 +214,6 @@ if not raw_data.empty:
             grid_data = grid_data[grid_data['TU_Cost'] > 30000]
         elif filter_cost == "Projects > $40,000":
             grid_data = grid_data[grid_data['TU_Cost'] > 40000]
-            
         if filter_utility:
             grid_data = grid_data[grid_data['Utility Company'].isin(filter_utility)]
 
@@ -254,15 +240,15 @@ if not grid_data.empty:
 # --- THE MULTI-LAYER MAP ENGINE ---
 if not grid_data.empty:
     st.subheader("🗺️ Enterprise Saturation Map")
-    st.caption("Map updates dynamically. Open = White | Complete = Vibrant Blue | Cancelled = Dashed")
+    st.caption("Map updates dynamically. Open = White | Complete = Sapphire Blue | Cancelled = Dashed")
 
     # Map Targeting Logic
     start_lat, start_lon, start_zoom = 42.25, -71.80, 8
     
-    if universal_search and not grid_data.empty:
-        # If user searched, zoom directly in on the target
+    # Only super-zoom if the search was successful!
+    if universal_search and not search_failed and not grid_data.empty:
         if pd.notna(grid_data.iloc[0]['Lat']):
-            start_lat, start_lon, start_zoom = grid_data.iloc[0]['Lat'], grid_data.iloc[0]['Lon'], 13
+            start_lat, start_lon, start_zoom = grid_data.iloc[0]['Lat'], grid_data.iloc[0]['Lon'], 14
 
     ma_map = folium.Map(location=[start_lat, start_lon], zoom_start=start_zoom, tiles="CartoDB dark_matter")
 
@@ -324,8 +310,8 @@ if not grid_data.empty:
         folium.LayerControl().add_to(ma_map) 
 
     # --- THE RADAR LOCK RETICLE ---
-    # If the user performed a search, drop a distinct red targeting pin so they don't lose it
-    if universal_search and not map_data.empty:
+    # Drops a distinct red pin *only* if the search didn't fail
+    if universal_search and not search_failed and not map_data.empty:
         target_row = map_data.iloc[0]
         folium.Marker(
             location=[target_row['Lat'], target_row['Lon']],
@@ -357,7 +343,6 @@ if not grid_data.empty:
     total_kw = existing_kw + new_kw
     is_complex_review = total_kw > 25.0
     
-    # Calculate historical exposure based on currently filtered map view
     historical_exposure = grid_data['TU_Cost'].mean() if not grid_data.empty else 0
     
     if is_complex_review or historical_exposure > 5000:
@@ -415,7 +400,6 @@ if not grid_data.empty:
 
     st.divider()
 
-    # --- THE AUDIT DETECTOR ---
     if len(unmapped_cities) > 0:
         with st.expander("📝 System Data Audit: Unmapped Pipeline Cities"):
             st.write(f"**{len(unmapped_cities)} cities from the CRM export require GPS coordinate assignment.**")
