@@ -26,6 +26,7 @@ def process_data():
         try:
             df = pd.read_csv(filename)
             
+            # Status Extraction
             if 'Project Status:' in df.columns:
                 df['Status'] = df['Project Status:'].astype(str).str.title().str.strip()
             elif 'Project Status' in df.columns:
@@ -35,22 +36,31 @@ def process_data():
             else:
                 df['Status'] = default_status
                 
+            # City Extraction
             if 'Jurisdiction: Jurisdiction Name' in df.columns:
                 df['City'] = df['Jurisdiction: Jurisdiction Name'].astype(str).str.replace('MA-TOWN ', '', case=False).str.replace('MA-CITY ', '', case=False)
             
+            # Cost Extraction
             if 'Line Item Price to Customer' in df.columns:
                 df['TU_Cost'] = df['Line Item Price to Customer']
-            elif 'TU Invoice:' in df.columns:
-                df['TU_Cost'] = df['TU Invoice:']
+            elif 'TU Invoice Amount:' in df.columns:
+                df['TU_Cost'] = df['TU Invoice Amount:']
             elif 'TU Invoice' in df.columns:
                 df['TU_Cost'] = df['TU Invoice']
             elif 'Total Cost' in df.columns:
                 df['TU_Cost'] = df['Total Cost']
             
+            # Utility Extraction
             if 'Utility' in df.columns and 'Utility Company' not in df.columns:
                 df['Utility Company'] = df['Utility']
                 
-            # Safely capture the BrightBox / Battery Column
+            # Zip Code Extraction
+            if 'Zip Code:' in df.columns:
+                df['Zip Code'] = df['Zip Code:']
+            elif 'Zip Code' not in df.columns:
+                df['Zip Code'] = "Unknown"
+                
+            # Battery Extraction
             if 'BrightBox' in df.columns:
                 df['Battery'] = df['BrightBox'].astype(str).str.upper().isin(['TRUE', 'YES', 'Y', '1'])
             else:
@@ -66,10 +76,10 @@ def process_data():
     df_master = pd.concat(df_list, ignore_index=True)
     
     # --- SANITIZATION & CLEANING ---
-    if 'Job Code' not in df_master.columns:
-        df_master['Job Code'] = "Unknown"
-    else:
-        df_master['Job Code'] = df_master['Job Code'].astype(str).str.strip()
+    df_master['Job Code'] = df_master['Job Code'].astype(str).str.strip() if 'Job Code' in df_master.columns else "Unknown"
+    
+    # Zip Code Sanitization
+    df_master['Zip Code'] = df_master['Zip Code'].astype(str).str.extract(r'(\d{5})')[0].fillna("Unknown")
 
     if 'City' not in df_master.columns: df_master['City'] = "Unknown"
     df_master = df_master.dropna(subset=['City'])
@@ -87,8 +97,7 @@ def process_data():
     else:
         df_master['TU_Cost'] = 0.0
 
-    if 'Utility Company' not in df_master.columns:
-        df_master['Utility Company'] = "Unknown Utility"
+    df_master['Utility Company'] = df_master['Utility Company'] if 'Utility Company' in df_master.columns else "Unknown Utility"
         
     def map_utility(u):
         u = str(u).upper()
@@ -158,10 +167,11 @@ def process_data():
 # Execute loader
 raw_data, unmapped_cities = process_data()
 
-# --- SIDEBAR: ANALYTICS & SEARCH FILTERS ---
+# --- SIDEBAR: THE UNIVERSAL SMART SEARCH ---
 if not raw_data.empty:
-    st.sidebar.header("🔍 Direct Project Search")
-    search_job = st.sidebar.text_input("Enter Job Code (e.g., 221R-057SANT)")
+    st.sidebar.header("🔍 Universal Pipeline Search")
+    # Clean, concise search bar that takes any format
+    universal_search = st.sidebar.text_input("Search by Job Code, City, or Zip Code:", placeholder="e.g., 221R-057, Boston, 02108")
     st.sidebar.divider()
     
     st.sidebar.header("📊 Market Analytics Filters")
@@ -172,7 +182,6 @@ if not raw_data.empty:
     
     filter_battery = st.sidebar.radio("System Design Type", ["All Systems", "Battery Included", "Solar Only"])
     
-    # UPDATED: Added $30,000 and $40,000 thresholds
     filter_cost = st.sidebar.selectbox("Financial Risk Threshold", [
         "All Projects", 
         "Projects > $0 (Flagged)", 
@@ -185,14 +194,21 @@ if not raw_data.empty:
     all_utils = sorted([str(u) for u in raw_data['Utility Company'].unique() if u != 'Unknown Utility'])
     filter_utility = st.sidebar.multiselect("Utility Provider", all_utils, default=all_utils)
 
-    # Apply Filters
+    # --- APPLY FILTERS ---
     grid_data = raw_data.copy()
     
-    if search_job:
-        grid_data = grid_data[grid_data['Job Code'].str.contains(search_job, case=False, na=False)]
+    if universal_search:
+        search_term = universal_search.lower().strip()
+        # Smart matching across three columns
+        mask = (
+            grid_data['Job Code'].str.lower().str.contains(search_term, na=False) |
+            grid_data['City'].str.lower().str.contains(search_term, na=False) |
+            grid_data['Zip Code'].str.contains(search_term, na=False)
+        )
+        grid_data = grid_data[mask]
         if grid_data.empty:
-            st.sidebar.error(f"Job Code '{search_job}' not found.")
-            grid_data = raw_data.copy() 
+            st.sidebar.error(f"No results found for '{universal_search}'.")
+            grid_data = raw_data.copy() # Reset if not found so the map doesn't break
     else:
         if filter_status != "All":
             grid_data = grid_data[grid_data['Status'] == filter_status]
@@ -201,7 +217,6 @@ if not raw_data.empty:
         elif filter_battery == "Solar Only":
             grid_data = grid_data[grid_data['Battery'] == False]
         
-        # UPDATED: Filtering logic for new high-tier thresholds
         if filter_cost == "Projects > $0 (Flagged)":
             grid_data = grid_data[grid_data['TU_Cost'] > 0]
         elif filter_cost == "Projects > $10,000":
@@ -236,53 +251,25 @@ if not grid_data.empty:
     col_kpi4.metric("Utility with Highest TU Frequency", highest_util)
     st.divider()
 
-# --- TARGET MARKET SELECTION ---
+# --- THE MULTI-LAYER MAP ENGINE ---
 if not grid_data.empty:
-    st.subheader("1. Location Selection & System Design")
-    col1, col2 = st.columns([1, 2])
-
-    available_cities = ["Statewide Overview"]
-    unique_cities = sorted([str(city) for city in grid_data['City'].unique()])
-    available_cities += unique_cities
-
-    if search_job and not grid_data.empty:
-        default_city = grid_data.iloc[0]['City']
-        try:
-            city_index = available_cities.index(default_city)
-        except ValueError:
-            city_index = 0
-    else:
-        city_index = 0
-
-    with col1:
-        selected_city = st.selectbox("Select Target MA City", available_cities, index=city_index)
-        target_found = selected_city != "Statewide Overview"
-
-    with col2:
-        st.markdown("**Test a New System Design:**")
-        c_a, c_b = st.columns(2)
-        with c_a:
-            existing_kw = st.number_input("Existing Solar (kW AC)", min_value=0.0, max_value=50.0, value=0.0, step=0.5)
-        with c_b:
-            new_kw = st.number_input("New System Capacity (kW AC)", min_value=0.0, max_value=50.0, value=10.0, step=0.5)
-
-    # --- THE MULTI-LAYER MAP ENGINE ---
-    st.divider()
     st.subheader("🗺️ Enterprise Saturation Map")
-    st.caption("Map updates dynamically based on Status Filter. Open = White | Complete = Vibrant Blue | Cancelled = Dashed")
+    st.caption("Map updates dynamically. Open = White | Complete = Vibrant Blue | Cancelled = Dashed")
 
+    # Map Targeting Logic
     start_lat, start_lon, start_zoom = 42.25, -71.80, 8
     
-    if search_job and not grid_data.empty:
+    if universal_search and not grid_data.empty:
+        # If user searched, zoom directly in on the target
         if pd.notna(grid_data.iloc[0]['Lat']):
-            start_lat, start_lon, start_zoom = grid_data.iloc[0]['Lat'], grid_data.iloc[0]['Lon'], 14
+            start_lat, start_lon, start_zoom = grid_data.iloc[0]['Lat'], grid_data.iloc[0]['Lon'], 13
 
     ma_map = folium.Map(location=[start_lat, start_lon], zoom_start=start_zoom, tiles="CartoDB dark_matter")
 
     map_data = grid_data.dropna(subset=['Lat', 'Lon'])
     
     if not map_data.empty:
-        city_summary = map_data.groupby(['City', 'Status', 'Job Code']).agg({
+        city_summary = map_data.groupby(['City', 'Zip Code', 'Status', 'Job Code']).agg({
             'TU_Cost': 'sum',
             'Utility Company': 'first',
             'Battery': 'first',
@@ -304,16 +291,17 @@ if not grid_data.empty:
             else:
                 risk_color = "#00cc66" 
                 
+            # Styling Logic
             if row['Status'] == 'Cancelled':
                 border_color = risk_color
                 weight = 3
                 dash = '5, 5'
             elif row['Status'] == 'Complete':
-                border_color = "#00a8ff" 
+                border_color = "#00a8ff" # Vibrant Sapphire Blue
                 weight = 3
                 dash = None
             else:
-                border_color = "#ffffff" 
+                border_color = "#ffffff" # Crisp White for Open
                 weight = 2
                 dash = None
                 
@@ -322,7 +310,7 @@ if not grid_data.empty:
             folium.CircleMarker(
                 location=[offset_lat, offset_lon],
                 radius=8 if row['TU_Cost'] == 0 else 12,
-                popup=f"<b>{row['City']} ({row['Status']})</b><br>Job: {row['Job Code']}<br>Utility: {row['Utility Company']}<br>TU Invoice Amount: ${row['TU_Cost']:,.2f}{battery_badge}",
+                popup=f"<b>{row['City']}, MA {row['Zip Code']} ({row['Status']})</b><br>Job: {row['Job Code']}<br>Utility: {row['Utility Company']}<br>TU Invoice Amount: ${row['TU_Cost']:,.2f}{battery_badge}",
                 color=border_color,
                 fill=True,
                 fill_color=risk_color,
@@ -335,74 +323,95 @@ if not grid_data.empty:
             fg.add_to(ma_map)
         folium.LayerControl().add_to(ma_map) 
 
-    if target_found and not search_job:
-        target_row = grid_data[grid_data['City'] == selected_city].iloc[0]
-        if pd.notna(target_row['Lat']):
-            folium.Circle(location=[target_row['Lat'], target_row['Lon']], radius=3000, color="white", weight=3, dash_array='5, 5', fill=False).add_to(ma_map)
+    # --- THE RADAR LOCK RETICLE ---
+    # If the user performed a search, drop a distinct red targeting pin so they don't lose it
+    if universal_search and not map_data.empty:
+        target_row = map_data.iloc[0]
+        folium.Marker(
+            location=[target_row['Lat'], target_row['Lon']],
+            icon=folium.Icon(color='red', icon='info-sign'),
+            tooltip="Targeted Search Area"
+        ).add_to(ma_map)
+        
+        folium.Circle(
+            location=[target_row['Lat'], target_row['Lon']],
+            radius=1500,
+            color="#ff4b4b",
+            weight=3,
+            fill=True,
+            fill_opacity=0.1
+        ).add_to(ma_map)
 
     st_folium(ma_map, width=1200, height=550, returned_objects=[])
 
-    # --- CROSS-FUNCTIONAL STRATEGY COMMAND CENTER ---
-    if target_found:
-        total_kw = existing_kw + new_kw
-        is_complex_review = total_kw > 25.0
-        
-        city_history = raw_data[raw_data['City'] == selected_city]
-        historical_exposure = city_history['TU_Cost'].mean() if not city_history.empty else 0
-        
-        if is_complex_review or historical_exposure > 5000:
-            timeline_status = "4-8 Weeks (Complex Review)"
-            risk_level = "Red"
-        elif historical_exposure > 0:
-            timeline_status = "2-4 Weeks (Moderate)"
-            risk_level = "Yellow"
+    # --- STRATEGY COMMAND CENTER ---
+    st.divider()
+    st.subheader("2. System Design & Capacity Diagnostics")
+    
+    col_a, col_b = st.columns([1, 2])
+    with col_a:
+        st.markdown("**Test Proposed AC Design:**")
+        existing_kw = st.number_input("Existing Solar (kW AC)", min_value=0.0, max_value=50.0, value=0.0, step=0.5)
+        new_kw = st.number_input("New System Capacity (kW AC)", min_value=0.0, max_value=50.0, value=10.0, step=0.5)
+    
+    total_kw = existing_kw + new_kw
+    is_complex_review = total_kw > 25.0
+    
+    # Calculate historical exposure based on currently filtered map view
+    historical_exposure = grid_data['TU_Cost'].mean() if not grid_data.empty else 0
+    
+    if is_complex_review or historical_exposure > 5000:
+        timeline_status = "4-8 Weeks (Complex Review)"
+        risk_level = "Red"
+    elif historical_exposure > 0:
+        timeline_status = "2-4 Weeks (Moderate)"
+        risk_level = "Yellow"
+    else:
+        timeline_status = "1-2 Weeks (Simplified)"
+        risk_level = "Green"
+
+    with col_b:
+        c1, c2 = st.columns(2)
+        c1.metric("Expected Approval Timeline", timeline_status)
+        c2.metric("Est. Sunk Margin Risk", f"${historical_exposure + 2000:,.0f}" if historical_exposure > 0 else "$2,000", "High Risk" if risk_level == "Red" else "Acceptable", delta_color="inverse")
+
+    with st.expander("📊 Defensible Data Methodology (Analyst Notes)"):
+        st.markdown("""
+        **How is Est. Sunk Margin Risk Calculated?**
+        * **Baseline Sunk OpEx:** `$2,000` (Estimated standard Site Survey + Design Labor + CX Admin execution cost).
+        * **Transformer Upgrade (TU) Exposure:** Derived directly from the historical pipeline data average for the filtered geographic location.
+        * **Formula:** `Historical Local TU Average + Baseline Sunk OpEx = Est. Sunk Margin Risk`.
+        """)
+
+    st.divider()
+    st.subheader("3. Cross-Functional Strategy Matrix")
+    
+    tab_cx, tab_design, tab_policy = st.tabs(["🤝 Sales & CX Actions", "📐 Design Engineering Actions", "🏛️ Policy & Exec Actions"])
+    
+    with tab_cx:
+        if risk_level == "Red":
+            st.error("**High Friction Zone:** Reps must set timeline expectations of 4-8+ weeks for utility review. Prepare the customer for potential upgrade fees upfront to prevent late-stage cancellations.")
+        elif risk_level == "Yellow":
+            st.warning("**Moderate Friction Zone:** Standard timelines may be delayed. Monitor Interconnection queues closely and proactively communicate 2-4 week review periods.")
         else:
-            timeline_status = "1-2 Weeks (Simplified)"
-            risk_level = "Green"
-
-        st.divider()
-        st.subheader("2. Capacity & Expectation Diagnostics")
-        
-        col_a, col_b, col_c = st.columns(3)
-        col_a.metric("Design: Total Parcel AC", f"{total_kw} kW", "- Complex Review Triggered" if is_complex_review else "+ Simplified Track", delta_color="inverse")
-        col_b.metric("CX/Sales: Expected Approval Timeline", timeline_status)
-        col_c.metric("Finance: Est. Sunk Margin Risk", f"${historical_exposure + 2000:,.0f}" if historical_exposure > 0 else "$2,000", "High Risk" if risk_level == "Red" else "Acceptable", delta_color="inverse")
-
-        with st.expander("📊 Defensible Data Methodology (Analyst Notes)"):
-            st.markdown("""
-            **How is Est. Sunk Margin Risk Calculated?**
-            * **Baseline Sunk OpEx:** `$2,000` (Estimated standard Site Survey + Design Labor + CX Admin execution cost).
-            * **Transformer Upgrade (TU) Exposure:** Derived directly from the historical pipeline data average for this specific geographic location.
-            * **Formula:** `Historical Local TU Average + Baseline Sunk OpEx = Est. Sunk Margin Risk`.
-            * *Note on Timelines:* Exact day-counts have been replaced by structural regulatory stages (e.g., 'Complex Study') to ensure realistic, defensible expectations are set cross-functionally.
-            """)
-
-        tab_cx, tab_design, tab_policy = st.tabs(["🤝 Sales & CX Actions", "📐 Design Engineering Actions", "🏛️ Policy & Exec Actions"])
-        
-        with tab_cx:
-            if risk_level == "Red":
-                st.error("**High Friction Zone:** Reps must set timeline expectations of 4-8+ weeks for utility review. Prepare the customer for potential upgrade fees upfront to prevent late-stage cancellations.")
-            elif risk_level == "Yellow":
-                st.warning("**Moderate Friction Zone:** Standard timelines may be delayed. Monitor Interconnection queues closely and proactively communicate 2-4 week review periods.")
-            else:
-                st.success("**Clearance Zone:** Green light for standard sales pitch. Expect rapid 1-2 week utility approvals.")
-                
-        with tab_design:
-            if is_complex_review:
-                st.error(f"**System Modification Recommended:** Parcel AC ({total_kw}kW) exceeds the 25kW Simplified Track limit. Evaluate Power Control Systems (PCS) to hard-cap export below 25kW, or configure ESS for non-export to bypass Complex Study queues.")
-            elif risk_level == "Red":
-                st.error(f"**Grid Saturation Alert:** While the system size ({total_kw}kW) is under the 25kW limit, {selected_city} has a history of highly saturated transformers. Design conservatively. The utility may force secondary transformer upgrades regardless of system size.")
-            elif risk_level == "Yellow":
-                st.warning(f"**Moderate Congestion:** Standard AC sizing is acceptable, but ensure perfect SLD compliance to avoid administrative kickbacks in group study queues.")
-            else:
-                st.success(f"**Standard Design:** System size ({total_kw}kW) falls within Simplified thresholds and local grid capacity is historically open.")
-                
-        with tab_policy:
-            if risk_level == "Red" or risk_level == "Yellow":
-                util_name = city_history['Utility Company'].mode()[0] if not city_history.empty else "Utility"
-                st.info(f"**Lobbying Target:** {selected_city} is demonstrating repeated congestion with {util_name}. Log this data for the next DPU/Policy meeting to negotiate grid upgrade fee socialization.")
-            else:
-                st.write("No immediate policy escalation required for this market.")
+            st.success("**Clearance Zone:** Green light for standard sales pitch. Expect rapid 1-2 week utility approvals.")
+            
+    with tab_design:
+        if is_complex_review:
+            st.error(f"**System Modification Recommended:** Parcel AC ({total_kw}kW) exceeds the 25kW Simplified Track limit. Evaluate Power Control Systems (PCS) to hard-cap export below 25kW, or configure ESS for non-export to bypass Complex Study queues.")
+        elif risk_level == "Red":
+            st.error(f"**Grid Saturation Alert:** While the system size ({total_kw}kW) is under the 25kW limit, the targeted area has a history of highly saturated transformers. Design conservatively. The utility may force secondary transformer upgrades regardless of system size.")
+        elif risk_level == "Yellow":
+            st.warning(f"**Moderate Congestion:** Standard AC sizing is acceptable, but ensure perfect SLD compliance to avoid administrative kickbacks in group study queues.")
+        else:
+            st.success(f"**Standard Design:** System size ({total_kw}kW) falls within Simplified thresholds and local grid capacity is historically open.")
+            
+    with tab_policy:
+        if risk_level == "Red" or risk_level == "Yellow":
+            util_name = grid_data['Utility Company'].mode()[0] if not grid_data.empty else "Utility"
+            st.info(f"**Lobbying Target:** The targeted pipeline is demonstrating repeated congestion with {util_name}. Log this data for the next DPU/Policy meeting to negotiate grid upgrade fee socialization.")
+        else:
+            st.write("No immediate policy escalation required for this market view.")
 
     st.divider()
 
