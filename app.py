@@ -26,7 +26,6 @@ def process_data():
         try:
             df = pd.read_csv(filename)
             
-            # Status Extraction
             if 'Project Status:' in df.columns:
                 df['Status'] = df['Project Status:'].astype(str).str.title().str.strip()
             elif 'Project Status' in df.columns:
@@ -36,11 +35,9 @@ def process_data():
             else:
                 df['Status'] = default_status
                 
-            # City Extraction
             if 'Jurisdiction: Jurisdiction Name' in df.columns:
                 df['City'] = df['Jurisdiction: Jurisdiction Name'].astype(str).str.replace('MA-TOWN ', '', case=False).str.replace('MA-CITY ', '', case=False)
             
-            # Cost Extraction
             if 'Line Item Price to Customer' in df.columns:
                 df['TU_Cost'] = df['Line Item Price to Customer']
             elif 'TU Invoice:' in df.columns:
@@ -50,17 +47,14 @@ def process_data():
             elif 'Total Cost' in df.columns:
                 df['TU_Cost'] = df['Total Cost']
             
-            # Utility Extraction
             if 'Utility' in df.columns and 'Utility Company' not in df.columns:
                 df['Utility Company'] = df['Utility']
                 
-            # Zip Code Extraction
             if 'Zip Code:' in df.columns:
                 df['Zip Code'] = df['Zip Code:']
             elif 'Zip Code' not in df.columns:
                 df['Zip Code'] = "Unknown"
                 
-            # Battery Extraction
             if 'BrightBox' in df.columns:
                 df['Battery'] = df['BrightBox'].astype(str).str.upper().isin(['TRUE', 'YES', 'Y', '1'])
             else:
@@ -75,10 +69,7 @@ def process_data():
 
     df_master = pd.concat(df_list, ignore_index=True)
     
-    # --- SANITIZATION & CLEANING ---
     df_master['Job Code'] = df_master['Job Code'].astype(str).str.strip() if 'Job Code' in df_master.columns else "Unknown"
-    
-    # Zip Code Sanitization
     df_master['Zip Code'] = df_master['Zip Code'].astype(str).str.extract(r'(\d{5})')[0].fillna("Unknown")
 
     if 'City' not in df_master.columns: df_master['City'] = "Unknown"
@@ -88,7 +79,6 @@ def process_data():
     df_master = df_master[df_master['City'] != ''] 
     
     df_master['Status'] = df_master['Status'].replace({'Nan': 'Unknown', 'None': 'Unknown'})
-    
     if 'Battery' not in df_master.columns: df_master['Battery'] = False
 
     if 'TU_Cost' in df_master.columns:
@@ -108,7 +98,6 @@ def process_data():
         return u.title()
     df_master['Utility Company'] = df_master['Utility Company'].apply(map_utility)
 
-    # --- PRECISION GEOCODING (Master Database) ---
     ma_coords = {
         "Abington": (42.104, -70.945), "Acton": (42.485, -71.432), "Agawam": (42.069, -72.615), "Amesbury": (42.858, -70.930),
         "Amherst": (42.380, -72.523), "Andover": (42.658, -71.136), "Arlington": (42.415, -71.156), "Attleboro": (41.944, -71.283),
@@ -204,7 +193,7 @@ if not raw_data.empty:
         
         if grid_data.empty:
             st.sidebar.error(f"No pipeline results found for '{universal_search}'.")
-            grid_data = raw_data.copy() # Reset safely so the state view returns
+            grid_data = raw_data.copy() 
             search_failed = True
     else:
         if filter_status != "All":
@@ -256,7 +245,6 @@ if not grid_data.empty:
     # Map Targeting Logic
     start_lat, start_lon, start_zoom = 42.25, -71.80, 8
     
-    # Only super-zoom if the search was successful!
     if universal_search and not search_failed and not grid_data.empty:
         if pd.notna(grid_data.iloc[0]['Lat']):
             start_lat, start_lon, start_zoom = grid_data.iloc[0]['Lat'], grid_data.iloc[0]['Lon'], 14
@@ -288,30 +276,27 @@ if not grid_data.empty:
             else:
                 risk_color = "#00cc66" 
                 
-            # Styling Logic
             if row['Status'] == 'Cancelled':
                 border_color = risk_color
                 weight = 3
                 dash = '5, 5'
             elif row['Status'] == 'Complete':
-                border_color = "#00a8ff" # Vibrant Sapphire Blue
+                border_color = "#00a8ff" 
                 weight = 3
                 dash = None
             else:
-                border_color = "#ffffff" # Crisp White for Open
+                border_color = "#ffffff" 
                 weight = 2
                 dash = None
                 
             battery_badge = "<br><b>🔋 Includes Battery Storage</b>" if row['Battery'] else ""
-            
-            # The Formatted Data String
             hover_text = f"<b>{row['City']}, MA {row['Zip Code']} ({row['Status']})</b><br>Job: {row['Job Code']}<br>Utility: {row['Utility Company']}<br>TU Invoice Amount: ${row['TU_Cost']:,.2f}{battery_badge}"
                 
             folium.CircleMarker(
                 location=[offset_lat, offset_lon],
                 radius=8 if row['TU_Cost'] == 0 else 12,
-                tooltip=hover_text,  # INSTANT HOVER POPUP
-                popup=hover_text,    # KEEPS IT LOCKED IF CLICKED
+                tooltip=hover_text,  
+                popup=hover_text,    
                 color=border_color,
                 fill=True,
                 fill_color=risk_color,
@@ -324,27 +309,14 @@ if not grid_data.empty:
             fg.add_to(ma_map)
         folium.LayerControl().add_to(ma_map) 
 
-    # --- THE "GHOSTED" RADAR LOCK RETICLE ---
-    # Drops a distinct red pin *only* if the search didn't fail
+    # --- THE RADAR LOCK RETICLE (HOVER FIX APPLIED) ---
     if universal_search and not search_failed and not map_data.empty:
         target_row = map_data.iloc[0]
-        
-        # The center pin to identify the search target
+        # Replaced the blocking circle with a single, highly distinct target marker.
         folium.Marker(
             location=[target_row['Lat'], target_row['Lon']],
-            icon=folium.Icon(color='red', icon='star'),
+            icon=folium.Icon(color='red', icon='star', prefix='fa'),
             tooltip=f"🎯 Target Lock: {target_row['City']}"
-        ).add_to(ma_map)
-        
-        # The Radar Ring (Now interactive=False so your mouse passes right through it!)
-        folium.Circle(
-            location=[target_row['Lat'], target_row['Lon']],
-            radius=1500,
-            color="#ff4b4b",
-            weight=3,
-            fill=True,
-            fill_opacity=0.1,
-            interactive=False  # THE MAGIC Z-INDEX FIX
         ).add_to(ma_map)
 
     st_folium(ma_map, width=1200, height=550, returned_objects=[])
