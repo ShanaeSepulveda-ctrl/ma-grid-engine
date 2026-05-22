@@ -3,7 +3,7 @@ import pandas as pd
 import folium
 from streamlit_folium import st_folium
 
-st.set_page_config(page_title="MA Resilience Dashboard", page_icon="⚡", layout="wide")
+st.set_page_config(page_title="MA Grid Intelligence", page_icon="⚡", layout="wide")
 st.title("⚡ MA Resilience & Strategy Dashboard")
 
 @st.cache_data
@@ -11,7 +11,7 @@ def load_and_clean_data():
     # 1. Load Master Pipeline
     df = pd.read_csv("master_pipeline.csv")
     
-    # 2. Map Columns to Standard Names
+    # 2. Map all columns (A-N) to internal standard variables
     rename_map = {
         'Project: Service Contract: Service Contract Event: Job Code': 'Job Code',
         'Line Item Price to Customer': 'TU_Cost',
@@ -19,13 +19,13 @@ def load_and_clean_data():
         'Project: Service Contract: Service Contract Event: PTO Recorded Date': 'PTO Date',
         'Created Date': 'Created Date',
         'City': 'City',
-        'BrightBox': 'Battery'
+        'BrightBox': 'Battery',
+        'Address': 'Address',
+        'Line Item Cancellation Date': 'Cancel Date'
     }
     df = df.rename(columns=rename_map)
     
-    # 3. Deduplication: The "Clean Sweep"
-    # Removes any identical rows, then ensures each Job Code appears only once
-    df = df.drop_duplicates()
+    # 3. Deduplication: Keeping only the first unique Job Code
     df = df.drop_duplicates(subset=['Job Code'], keep='first')
     
     # 4. Clean Financials & Dates
@@ -34,7 +34,7 @@ def load_and_clean_data():
     df['PTO Date'] = pd.to_datetime(df['PTO Date'], errors='coerce')
     df['Year'] = df['Created Date'].dt.year.fillna(0).astype(int)
     
-    # 5. Calculate Cycle Time (True Duration per project)
+    # 5. Cycle Time Calculation
     df['Cycle Time'] = (df['PTO Date'] - df['Created Date']).dt.days
     
     # 6. Status Mapping
@@ -68,37 +68,40 @@ if battery_filter == "No": data = data[data['Battery'] == False]
 # --- KPI DASHBOARD ---
 col1, col2, col3, col4 = st.columns(4)
 col1.metric("Total Exposure", f"${data['TU_Cost'].sum():,.2f}")
-col2.metric("Project Count", len(data))
+col2.metric("Active Projects", len(data[data['Status_Clean'] == 'Active']))
 col3.metric("Avg Cycle Time", f"{data['Cycle Time'].mean():.0f} Days" if not data['Cycle Time'].isna().all() else "N/A")
-col4.metric("Battery Projects", len(data[data['Battery']==True]))
+col4.metric("Battery Included", len(data[data['Battery'] == True]))
 st.divider()
 
-# --- MAP ENGINE ---
+# --- MAP ENGINE (Safe-Plot Logic) ---
 st.subheader("Interactive Saturation Map")
 m = folium.Map(location=[42.25, -71.80], zoom_start=8, tiles="CartoDB dark_matter")
 
+# City Dictionary (Add your city coordinates here)
+ma_coords = {"Fitchburg": (42.583, -71.802), "Springfield": (42.101, -72.589), "Brockton": (42.083, -71.018), 
+             "Ludlow": (42.160, -72.474), "Methuen": (42.726, -71.190), "Lee": (42.304, -73.249), "Boston": (42.360, -71.058)}
+
 if not data.empty:
     for _, row in data.iterrows():
-        # Fallback for missing Lat/Lon
-        lat = 42.25 if pd.isna(row.get('Lat', None)) else row.get('Lat', 42.25)
-        lon = -71.80 if pd.isna(row.get('Lon', None)) else row.get('Lon', -71.80)
+        # FALLBACK: If city not in dictionary, use default MA coords so dot is NEVER hidden
+        coords = ma_coords.get(row.get('City'), (42.25, -71.80))
         
-        # Color Coding
+        # Color coding: White=Active, Blue=Complete, Red=Cancelled
         if row['Status_Clean'] == 'Active': color = "white"
-        elif row['Status_Clean'] == 'Complete': color = "#00a8ff" # Sapphire Blue
+        elif row['Status_Clean'] == 'Complete': color = "#00a8ff"
         else: color = "red"
             
         folium.CircleMarker(
-            [lat, lon],
+            coords,
             radius=6,
             color=color,
             fill=True,
-            tooltip=f"{row['Job Code']} | {row['Status_Clean']} | ${row['TU_Cost']:,.0f}"
+            fill_opacity=0.7,
+            tooltip=f"{row['City']} | {row['Job Code']} | ${row['TU_Cost']:,.0f} | Battery: {'Yes' if row['Battery'] else 'No'}"
         ).add_to(m)
 
 st_folium(m, width=1000, height=500)
 
-# --- TRENDS ---
-st.subheader("Financial Volume by Year")
+st.subheader("Financial Performance")
 trend = data.groupby('Year')['TU_Cost'].sum()
 st.bar_chart(trend)
