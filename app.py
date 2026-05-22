@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import folium
+import hashlib
 from streamlit_folium import st_folium
 
 # --- PAGE CONFIG ---
@@ -18,7 +19,7 @@ def load_and_clean_data():
         'SOW Proposal Summary: Project: Service Contract: Status': 'Status',
         'Project: Service Contract: Service Contract Event: CAP date approved': 'CAP Date',
         'Project: Service Contract: Service Contract Event: PTO Recorded Date': 'PTO Date',
-        'Created Date': 'Created Date', # Invoice Date
+        'Created Date': 'Created Date', 
         'City': 'City',
         'Utility Company': 'Utility',
         'BrightBox': 'Battery'
@@ -79,11 +80,12 @@ col3.metric("Battery-Ready", len(data[data['Battery'] == True]))
 col4.metric("Avg Cycle Time (CAP to PTO)", f"{data['Cycle Time'].mean():.0f} Days" if not data['Cycle Time'].isna().all() else "N/A")
 st.divider()
 
-# --- THE "SHOCK & AWE" MAP ENGINE ---
+# --- THE STATEWIDE SATURATION MAP ENGINE ---
 st.subheader("Interactive Saturation Map")
-st.caption("🟢 Complete (Clean Energy) | 🟡 Active (Solar/Waiting) | 🔴 Cancelled (Grid Friction)")
+st.caption("🟢 Complete (Clean Energy) | 🟡 Active (Solar/Waiting) | 🔴 Cancelled (Grid Friction) | 🧿 **Cyan Border = Battery Included**")
 m = folium.Map(location=[42.25, -71.80], zoom_start=8, tiles="CartoDB dark_matter")
 
+# Core MA Cities
 ma_coords = {
     "Abington": (42.104, -70.945), "Acton": (42.485, -71.432), "Agawam": (42.069, -72.615), "Amesbury": (42.858, -70.930),
     "Amherst": (42.380, -72.523), "Andover": (42.658, -71.136), "Boston": (42.360, -71.058), "Brockton": (42.083, -71.018), 
@@ -91,36 +93,55 @@ ma_coords = {
     "Lee": (42.304, -73.249), "Worcester": (42.262, -71.802), "Ashby": (42.678, -71.819), "Medford": (42.418, -71.106)
 }
 
+def get_stable_hash(s):
+    return int(hashlib.md5(str(s).encode('utf-8')).hexdigest(), 16)
+
 if not data.empty:
     for _, row in data.iterrows():
-        base_lat, base_lon = ma_coords.get(row['City'], (42.25, -71.80))
+        city_name = row.get('City', 'Unknown')
         
-        # THE SWARM ENGINE: Spreads the dots out widely so the map looks overwhelmingly full
-        job_str = str(row['Job Code'])
-        val1 = sum(ord(c) for c in job_str)
-        val2 = sum(ord(c) * i for i, c in enumerate(job_str))
+        if city_name in ma_coords:
+            base_lat, base_lon = ma_coords[city_name]
+        else:
+            # SMART-SPREAD FALLBACK: Distributes unknown cities evenly across MA bounds
+            city_hash = get_stable_hash(city_name)
+            base_lat = 41.5 + (city_hash % 130) / 100.0      # Maps to MA Lat range (41.5 - 42.8)
+            base_lon = -73.3 + ((city_hash // 100) % 330) / 100.0 # Maps to MA Lon range (-73.3 - -70.0)
         
-        offset_lat = base_lat + ((val1 % 100) - 50) / 750.0  # Wide scatter radius
-        offset_lon = base_lon + ((val2 % 100) - 50) / 750.0
+        # JITTER ENGINE: Spreads overlapping dots within the same city
+        job_hash = get_stable_hash(row['Job Code'])
+        offset_lat = base_lat + ((job_hash % 100) - 50) / 800.0 
+        offset_lon = base_lon + (((job_hash // 100) % 100) - 50) / 800.0
         
-        if row['Status_Clean'] == 'Active': color = "#FFC107"
-        elif row['Status_Clean'] == 'Complete': color = "#00E676"
-        else: color = "#FF3D00"
+        # Color Logic
+        if row['Status_Clean'] == 'Active': fill_color = "#FFC107"
+        elif row['Status_Clean'] == 'Complete': fill_color = "#00E676"
+        else: fill_color = "#FF3D00"
         
-        tooltip_html = f"<div style='font-family:sans-serif; width: 160px;'><b>{row['Job Code']}</b><hr style='margin: 5px 0;'><b>Status:</b> {row['Status_Clean']}<br><b>Cost:</b> ${row['TU_Cost']:,.0f}<br><b>City:</b> {row['City']}</div>"
+        # BATTERY IDENTIFIER: Thick Cyan Border
+        if row['Battery']:
+            border_color = "#00FFFF" # Electric Cyan
+            border_weight = 3
+        else:
+            border_color = fill_color
+            border_weight = 1
+        
+        tooltip_html = f"<div style='font-family:sans-serif; width: 160px;'><b>{row['Job Code']}</b><hr style='margin: 5px 0;'><b>Status:</b> {row['Status_Clean']}<br><b>Cost:</b> ${row['TU_Cost']:,.0f}<br><b>Battery:</b> {'Yes' if row['Battery'] else 'No'}<br><b>City:</b> {row['City']}</div>"
         
         folium.CircleMarker(
             [offset_lat, offset_lon], 
-            radius=5, # Slightly smaller dots so they form a dense cloud
-            color=color, 
+            radius=5,
+            color=border_color,
+            weight=border_weight,
             fill=True, 
-            fill_opacity=0.6, # Slightly transparent so overlapping red/amber/green mixes visually
+            fill_color=fill_color,
+            fill_opacity=0.7,
             tooltip=folium.Tooltip(tooltip_html)
         ).add_to(m)
 
 st_folium(m, width=1000, height=500)
 
-# --- STRATEGY TABS (THE PRESENTATION SHOWSTOPPER) ---
+# --- STRATEGY TABS ---
 st.divider()
 st.subheader("Cross-Functional Strategy Matrix")
 
@@ -130,7 +151,6 @@ with tab1:
     st.markdown("### Dynamic Utility SLAs")
     st.write("Based on our live historical data, Sales & CX should set customer expectations using these utility-specific timelines:")
     
-    # Dynamically calculate average cycle time per utility
     utility_sla = df[df['Cycle Time'].notnull()].groupby('Utility')['Cycle Time'].mean().reset_index()
     utility_sla['Cycle Time'] = utility_sla['Cycle Time'].round(0).astype(int).astype(str) + " Days"
     utility_sla = utility_sla.rename(columns={'Cycle Time': 'Predicted Timeline (CAP to PTO)'}).sort_values(by='Predicted Timeline (CAP to PTO)', ascending=False)
