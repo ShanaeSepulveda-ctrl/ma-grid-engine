@@ -83,7 +83,6 @@ st.subheader("Interactive Saturation Map")
 st.caption("🟢 Complete (Clean Energy) | 🟡 Active (Solar/Waiting) | 🔴 Cancelled (Grid Friction) | 🧿 **Cyan Border = Battery Included**")
 m = folium.Map(location=[42.25, -71.80], zoom_start=8, tiles="CartoDB dark_matter")
 
-# Expanded Coastal & Core Cities
 ma_coords = {
     "Abington": (42.104, -70.945), "Acton": (42.485, -71.432), "Agawam": (42.069, -72.615), "Amesbury": (42.858, -70.930),
     "Amherst": (42.380, -72.523), "Andover": (42.658, -71.136), "Boston": (42.360, -71.058), "Brockton": (42.083, -71.018), 
@@ -103,24 +102,20 @@ if not data.empty:
         if city_name in ma_coords:
             base_lat, base_lon = ma_coords[city_name]
         else:
-            # THE FIX: Safe Inland Bounding Box (Central MA only, keeps dots out of the Atlantic)
             city_hash = get_stable_hash(city_name)
-            base_lat = 42.1 + (city_hash % 50) / 100.0        # 42.1 to 42.6 Lat
-            base_lon = -72.8 + ((city_hash // 100) % 130) / 100.0   # -72.8 to -71.5 Lon
+            base_lat = 42.1 + (city_hash % 50) / 100.0        
+            base_lon = -72.8 + ((city_hash // 100) % 130) / 100.0   
         
-        # THE FIX: Tighter Swarm Radius (Divisor increased from 800 to 1400)
         job_hash = get_stable_hash(row['Job Code'])
         offset_lat = base_lat + ((job_hash % 100) - 50) / 1400.0 
         offset_lon = base_lon + (((job_hash // 100) % 100) - 50) / 1400.0
         
-        # Color Logic
         if row['Status_Clean'] == 'Active': fill_color = "#FFC107"
         elif row['Status_Clean'] == 'Complete': fill_color = "#00E676"
         else: fill_color = "#FF3D00"
         
-        # BATTERY IDENTIFIER: Thick Cyan Border
         if row['Battery']:
-            border_color = "#00FFFF" # Electric Cyan
+            border_color = "#00FFFF" 
             border_weight = 3
         else:
             border_color = fill_color
@@ -165,14 +160,26 @@ with tab2:
     * **The PCS / Zero-Export Trigger:** For projects in high-friction zones (e.g., Fitchburg, Springfield), instantly trigger Power Control System (PCS) hard-caps or Zero-Export battery profiles. This legally bypasses the utility's requirement for a massive transformer upgrade fee by preventing the system from exporting excess power to the grid.
     """)
 
+# --- NEW POLICY TAB CONTENT ---
 with tab3:
     st.markdown("### DPU Lobbying Intelligence")
     cancelled_data = df[df['Status_Clean'] == 'Cancelled']
     total_stranded_cost = cancelled_data['TU_Cost'].sum()
     
     st.error(f"🚨 **Grid Failure Impact:** Utility congestion has resulted in **${total_stranded_cost:,.2f}** of cancelled project value across **{len(cancelled_data)}** residential properties.")
+    
     st.markdown("""
-    **The DPU Argument:** "Massachusetts is failing its clean energy mandates not because of consumer demand, but because utilities are attempting to pass nearly a million dollars in infrastructure upgrades onto individual families. We need socialized grid upgrade fees."
+    **Strategic Policy Proposals for the DPU:**
+    To accelerate clean energy deployment without placing undue burden on either individual homeowners or the general ratepayer base, we advocate for the following modernized regulatory frameworks:
+
+    1. **Pro-Rata Cost Sharing (The Depreciation Model):**
+       If a transformer requires upgrading, costs should be split based on the remaining lifespan of the existing hardware. If a transformer is 80% through its useful life, the utility covers 80%, and the homeowner covers the remaining 20%.
+
+    2. **Dedicated Grid Modernization Grants:**
+       Transition away from individual ratepayer shock by utilizing state-level or federal infrastructure funds specifically earmarked for residential grid upgrades in high-density solar corridors.
+
+    3. **Fast-Tracked PCS Integration:**
+       Mandate that utilities automatically approve interconnections (waiving hardware upgrade fees) if the system is designed with a Power Control System (PCS) or Zero-Export battery profile that legally prevents grid overload.
     """)
 
 with tab4:
@@ -181,5 +188,7 @@ with tab4:
         st.write("**Financial Exposure by Year**")
         st.bar_chart(df[df['Year'] > 2000].groupby('Year')['TU_Cost'].sum(), color="#FFC107")
     with c2:
+        st.write("**Cycle Time (CAP to PTO) by Year**")
+        st.line_chart(df[(df['Year'] > 2000) & (df['Cycle Time'].notnull())].groupby('Year')['Cycle Time'].mean(), color="#00E676")
         st.write("**Cycle Time (CAP to PTO) by Year**")
         st.line_chart(df[(df['Year'] > 2000) & (df['Cycle Time'].notnull())].groupby('Year')['Cycle Time'].mean(), color="#00E676")
