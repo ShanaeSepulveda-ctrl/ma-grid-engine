@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import numpy as np
 import folium
 from streamlit_folium import st_folium
 
@@ -31,11 +32,13 @@ def load_and_clean_data():
     df['Created Date'] = pd.to_datetime(df['Created Date'], errors='coerce')
     df['PTO Date'] = pd.to_datetime(df['PTO Date'], errors='coerce')
     
-    # THE FIX: Bulletproof Year Extraction
+    # Bulletproof Year Extraction
     df['Year'] = df['Created Date'].apply(lambda x: x.year if pd.notnull(x) else 0).astype(int)
     
-    # 3. Cycle Time
+    # 3. Cycle Time (With Dirty Data Sanitization)
     df['Cycle Time'] = (df['PTO Date'] - df['Created Date']).dt.days
+    # THE FIX: If cycle time is negative (impossible), turn it into a blank (NaN) so it doesn't break the averages
+    df['Cycle Time'] = df['Cycle Time'].apply(lambda x: x if pd.notnull(x) and x >= 0 else np.nan)
     
     # 4. Status Mapping
     def categorize_status(s):
@@ -87,7 +90,7 @@ st.subheader("Interactive Saturation Map")
 st.caption("🟢 Complete (Clean Energy) | 🟡 Active (Solar/Waiting) | 🔴 Cancelled (Grid Friction)")
 m = folium.Map(location=[42.25, -71.80], zoom_start=8, tiles="CartoDB dark_matter")
 
-# Restored Master Coordinates
+# Master Coordinates
 ma_coords = {
     "Abington": (42.104, -70.945), "Acton": (42.485, -71.432), "Agawam": (42.069, -72.615), "Amesbury": (42.858, -70.930),
     "Amherst": (42.380, -72.523), "Andover": (42.658, -71.136), "Arlington": (42.415, -71.156), "Attleboro": (41.944, -71.283),
@@ -119,17 +122,17 @@ if not data.empty:
     for _, row in data.iterrows():
         base_lat, base_lon = ma_coords.get(row['City'], (42.25, -71.80))
         
-        # Jitter Engine (prevents dots from stacking completely on top of each other)
+        # Jitter Engine
         offset_lat = base_lat + (hash(str(row['Job Code'])) % 100) / 10000.0
         offset_lon = base_lon + (hash(str(row['Job Code']) + "x") % 100) / 10000.0
         
-        # --- THE NEW SOLAR/GRID COLOR SCHEME ---
+        # Solar/Grid Color Scheme
         if row['Status_Clean'] == 'Active': 
-            color = "#FFC107" # Solar Amber (Waiting/Caution)
+            color = "#FFC107" # Solar Amber
         elif row['Status_Clean'] == 'Complete': 
-            color = "#00E676" # Clean Energy Green (Success)
+            color = "#00E676" # Clean Energy Green
         else: 
-            color = "#FF3D00" # Grid Friction Red/Orange (Cancelled/Failed)
+            color = "#FF3D00" # Grid Friction Red/Orange
         
         tooltip_html = f"""
         <div style='font-family:sans-serif; width: 160px;'>
@@ -152,19 +155,21 @@ if not data.empty:
 
 st_folium(m, width=1000, height=500)
 
-# --- RESTORED TRENDS ENGINE ---
+# --- TRENDS ENGINE ---
 st.divider()
 col_trend, col_cycle = st.columns(2)
 
 with col_trend:
     st.subheader("📈 YoY Financial Exposure")
     trend_data = data[data['Year'] > 2000].groupby('Year')['TU_Cost'].sum()
-    st.bar_chart(trend_data, color="#FFC107") # Themed to match the Solar Amber
+    st.bar_chart(trend_data, color="#FFC107")
 
 with col_cycle:
     st.subheader("⏱️ Avg Cycle Time (By Year)")
-    cycle_trend = data[data['Year'] > 2000].groupby('Year')['Cycle Time'].mean()
-    st.line_chart(cycle_trend, color="#00E676") # Themed to match the Clean Green
+    # Filter out NaNs specifically for the chart to ensure a clean visual
+    clean_cycle_data = data[(data['Year'] > 2000) & (data['Cycle Time'].notnull())]
+    cycle_trend = clean_cycle_data.groupby('Year')['Cycle Time'].mean()
+    st.line_chart(cycle_trend, color="#00E676")
 
 # --- STRATEGY TABS ---
 st.divider()
