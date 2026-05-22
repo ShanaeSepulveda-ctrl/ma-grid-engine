@@ -11,86 +11,99 @@ st.title("MA Resilience & Strategy Dashboard")
 st.markdown("Enterprise pipeline intelligence, capacity mapping, and financial exposure tracking.")
 st.divider()
 
-# --- THE AUTOMATED MASTER INGESTION ENGINE ---
-@st.cache_data
+# --- THE LIVE AUTOMATED INGESTION ENGINE (Refreshes every 1 Hour) ---
+@st.cache_data(ttl=3600)
 def process_data():
-    df_list = []
+    # YOUR LIVE DATA BRIDGE URL
+    live_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTt6IQA-3Ee4DrzafeU8MZntRmF37kg83tFfw4f24ci-tFtvRxT0goN-KqyuA9IqP_Catwo3dw3hdpx/pub?gid=0&single=true&output=csv"
     
-    files_to_try = [
-        ("active_projects.csv", "Open"),
-        ("cancelled_projects.csv", "Cancelled"),
-        ("master_pipeline.csv", "Unknown")
-    ]
-    
-    for filename, default_status in files_to_try:
-        try:
-            df = pd.read_csv(filename)
+    try:
+        df = pd.read_csv(live_url)
+        
+        # 1. Status Extraction
+        if 'Project Status:' in df.columns:
+            df['Status'] = df['Project Status:'].astype(str).str.title().str.strip()
+        elif 'Project Status' in df.columns:
+            df['Status'] = df['Project Status'].astype(str).str.title().str.strip()
+        elif 'Status' in df.columns:
+            df['Status'] = df['Status'].astype(str).str.title().str.strip()
+        else:
+            df['Status'] = "Unknown"
             
-            # Status Extraction
-            if 'Project Status:' in df.columns:
-                df['Status'] = df['Project Status:'].astype(str).str.title().str.strip()
-            elif 'Project Status' in df.columns:
-                df['Status'] = df['Project Status'].astype(str).str.title().str.strip()
-            elif 'Status' in df.columns:
-                df['Status'] = df['Status'].astype(str).str.title().str.strip()
-            else:
-                df['Status'] = default_status
-                
-            # City Extraction
-            if 'Jurisdiction: Jurisdiction Name' in df.columns:
-                df['City'] = df['Jurisdiction: Jurisdiction Name'].astype(str).str.replace('MA-TOWN ', '', case=False).str.replace('MA-CITY ', '', case=False)
+        # 2. City Extraction
+        if 'Jurisdiction: Jurisdiction Name' in df.columns:
+            df['City'] = df['Jurisdiction: Jurisdiction Name'].astype(str).str.replace('MA-TOWN ', '', case=False).str.replace('MA-CITY ', '', case=False)
+        elif 'City' not in df.columns:
+            df['City'] = "Unknown"
+        
+        # 3. Cost Extraction
+        if 'Line Item Price to Customer' in df.columns:
+            df['TU_Cost'] = df['Line Item Price to Customer']
+        elif 'TU Invoice Amount:' in df.columns:
+            df['TU_Cost'] = df['TU Invoice Amount:']
+        elif 'TU Invoice' in df.columns:
+            df['TU_Cost'] = df['TU Invoice']
+        elif 'Total Cost' in df.columns:
+            df['TU_Cost'] = df['Total Cost']
+        else:
+            df['TU_Cost'] = 0.0
+        
+        # 4. Utility Extraction
+        if 'Utility' in df.columns and 'Utility Company' not in df.columns:
+            df['Utility Company'] = df['Utility']
             
-            # Cost Extraction
-            if 'Line Item Price to Customer' in df.columns:
-                df['TU_Cost'] = df['Line Item Price to Customer']
-            elif 'TU Invoice:' in df.columns:
-                df['TU_Cost'] = df['TU Invoice:']
-            elif 'TU Invoice' in df.columns:
-                df['TU_Cost'] = df['TU Invoice']
-            elif 'Total Cost' in df.columns:
-                df['TU_Cost'] = df['Total Cost']
-            
-            # Utility Extraction
-            if 'Utility' in df.columns and 'Utility Company' not in df.columns:
-                df['Utility Company'] = df['Utility']
-                
-            # Zip Code Extraction
-            if 'Zip Code:' in df.columns:
-                df['Zip Code'] = df['Zip Code:']
-            elif 'Zip Code' not in df.columns:
-                df['Zip Code'] = "Unknown"
-                
-            # Battery Extraction
-            if 'BrightBox' in df.columns:
-                df['Battery'] = df['BrightBox'].astype(str).str.upper().isin(['TRUE', 'YES', 'Y', '1'])
-            else:
-                df['Battery'] = False
-                
-            df_list.append(df)
-        except FileNotFoundError:
+        # 5. SMART ZIP CODE EXTRACTION
+        if 'Zip Code:' in df.columns:
+            df['Zip Code'] = df['Zip Code:']
+        elif 'Zip Code' in df.columns:
             pass
+        elif 'Full Address' in df.columns:
+            df['Zip Code'] = df['Full Address'].astype(str).str.extract(r'(\b\d{5}\b)')
+        elif 'Address' in df.columns:
+            df['Zip Code'] = df['Address'].astype(str).str.extract(r'(\b\d{5}\b)')
+        else:
+            df['Zip Code'] = "Unknown"
+            
+        # 6. Battery Extraction
+        if 'BrightBox' in df.columns:
+            df['Battery'] = df['BrightBox'].astype(str).str.upper().isin(['TRUE', 'YES', 'Y', '1'])
+        else:
+            df['Battery'] = False
+            
+        # 7. TEMPORAL EXTRACTION
+        if 'Year Invoiced' in df.columns:
+            df['Year'] = df['Year Invoiced'].astype(str).str.replace('.0', '', regex=False).str.strip()
+        elif 'Permit Approval Date' in df.columns:
+            df['Year'] = df['Permit Approval Date'].astype(str).str.extract(r'(\d{4})')
+        elif 'Created Date' in df.columns:
+            df['Year'] = df['Created Date'].astype(str).str.extract(r'(\d{4})')
+        elif 'Project Year' in df.columns:
+            df['Year'] = df['Project Year'].astype(str).str.replace('.0', '', regex=False).str.strip()
+        else:
+            df['Year'] = "All Time"
 
-    if not df_list:
+    except Exception as e:
+        st.error(f"Live Data Bridge Offline: Unable to read Google Sheets URL. ({e})")
         return pd.DataFrame(), []
 
-    df_master = pd.concat(df_list, ignore_index=True)
+    df_master = df.copy()
     
     # --- SANITIZATION & CLEANING ---
     df_master['Job Code'] = df_master['Job Code'].astype(str).str.strip() if 'Job Code' in df_master.columns else "Unknown"
     
-    # THE SMART ZIP CODE PARSER (Fixes the New England leading-zero bug)
+    # === THE SMART DEDUPLICATION ENGINE ===
+    df_master = df_master.drop_duplicates()
+    df_valid_jobs = df_master[df_master['Job Code'] != 'Unknown'].drop_duplicates(subset=['Job Code'], keep='first')
+    df_unknown_jobs = df_master[df_master['Job Code'] == 'Unknown']
+    df_master = pd.concat([df_valid_jobs, df_unknown_jobs], ignore_index=True)
+
+    # The Smart Zip Code Parser
     def clean_zip(z):
-        # Convert to string and drop decimal if pandas read it as float (e.g., 2108.0)
         z_str = str(z).split('.')[0] 
-        # Extract only the numeric digits
         digits = ''.join(filter(str.isdigit, z_str))
-        
-        if len(digits) == 4:
-            return "0" + digits # Re-attach the missing MA zero
-        elif len(digits) >= 5:
-            return digits[:5] # Keep clean 5-digit zips
-        else:
-            return "Unknown"
+        if len(digits) == 4: return "0" + digits
+        elif len(digits) >= 5: return digits[:5]
+        else: return "Unknown"
             
     df_master['Zip Code'] = df_master['Zip Code'].apply(clean_zip)
 
@@ -101,6 +114,8 @@ def process_data():
     df_master = df_master[df_master['City'] != ''] 
     
     df_master['Status'] = df_master['Status'].replace({'Nan': 'Unknown', 'None': 'Unknown'})
+    df_master['Year'] = df_master['Year'].replace({'Nan': 'All Time', 'nan': 'All Time', 'None': 'All Time'})
+    df_master['Year'] = df_master['Year'].fillna('All Time')
     
     if 'Battery' not in df_master.columns: df_master['Battery'] = False
 
@@ -187,6 +202,14 @@ if not raw_data.empty:
     st.sidebar.divider()
     
     st.sidebar.header("📊 Market Analytics Filters")
+    
+    valid_years = sorted([y for y in raw_data['Year'].unique() if y not in ['All Time', 'nan', 'Unknown']], reverse=True)
+    if valid_years:
+        available_years = ["All Years"] + valid_years
+        filter_year = st.sidebar.selectbox("Year Invoiced", available_years)
+    else:
+        filter_year = "All Years"
+        
     valid_statuses = [s for s in raw_data['Status'].unique() if s not in ['Unknown', 'nan']]
     available_statuses = ["All"] + sorted(valid_statuses)
     filter_status = st.sidebar.radio("Project Lifecycle Stage", available_statuses)
@@ -220,6 +243,8 @@ if not raw_data.empty:
             grid_data = raw_data.copy() 
             search_failed = True
     else:
+        if filter_year != "All Years":
+            grid_data = grid_data[grid_data['Year'] == filter_year]
         if filter_status != "All":
             grid_data = grid_data[grid_data['Status'] == filter_status]
         if filter_battery == "Battery Included":
@@ -243,7 +268,7 @@ if not raw_data.empty:
 
 else:
     grid_data = pd.DataFrame()
-    st.info("🚨 **System Note:** No pipeline data found. Please ensure your CSV files are uploaded to your GitHub repository.")
+    st.info("🚨 **System Note:** No live pipeline data found. Please check your Google Sheets connection.")
 
 # --- PROFESSIONAL FINANCIAL KPI PANEL ---
 if not grid_data.empty:
@@ -252,7 +277,9 @@ if not grid_data.empty:
     avg_tu_cost = flagged_projects['TU_Cost'].mean() if not flagged_projects.empty else 0
     total_projects_flagged = len(flagged_projects)
     
-    st.markdown("### 📈 Live Pipeline Financial Overview")
+    header_title = f"### 📈 Live Pipeline Financial Overview ({filter_year})" if filter_year != "All Years" else "### 📈 Live Pipeline Financial Overview"
+    st.markdown(header_title)
+    
     col_kpi1, col_kpi2, col_kpi3, col_kpi4 = st.columns(4)
     col_kpi1.metric("Total TU Invoice Exposure", f"${total_tu_invoiced:,.2f}")
     col_kpi2.metric("Projects with TU Exposure", total_projects_flagged)
@@ -266,7 +293,6 @@ if not grid_data.empty:
     st.subheader("🗺️ Enterprise Saturation Map")
     st.caption("Map updates dynamically. Open = White | Complete = Sapphire Blue | Cancelled = Dashed. **Hover over dots for project data.**")
 
-    # Map Targeting Logic
     start_lat, start_lon, start_zoom = 42.25, -71.80, 8
     
     if universal_search and not search_failed and not grid_data.empty:
@@ -282,6 +308,7 @@ if not grid_data.empty:
             'TU_Cost': 'sum',
             'Utility Company': 'first',
             'Battery': 'first',
+            'Year': 'first',
             'Lat': 'first',
             'Lon': 'first'
         }).reset_index()
@@ -300,7 +327,6 @@ if not grid_data.empty:
             else:
                 risk_color = "#00cc66" 
                 
-            # Styling Logic
             if row['Status'] == 'Cancelled':
                 border_color = risk_color
                 weight = 3
@@ -315,7 +341,9 @@ if not grid_data.empty:
                 dash = None
                 
             battery_badge = "<br><b>🔋 Includes Battery Storage</b>" if row['Battery'] else ""
-            hover_text = f"<b>{row['City']}, MA {row['Zip Code']} ({row['Status']})</b><br>Job: {row['Job Code']}<br>Utility: {row['Utility Company']}<br>TU Invoice Amount: ${row['TU_Cost']:,.2f}{battery_badge}"
+            year_badge = f" | {row['Year']}" if row['Year'] != "All Time" else ""
+            
+            hover_text = f"<b>{row['City']}, MA {row['Zip Code']} ({row['Status']}{year_badge})</b><br>Job: {row['Job Code']}<br>Utility: {row['Utility Company']}<br>TU Invoice Amount: ${row['TU_Cost']:,.2f}{battery_badge}"
                 
             folium.CircleMarker(
                 location=[offset_lat, offset_lon],
@@ -334,10 +362,8 @@ if not grid_data.empty:
             fg.add_to(ma_map)
         folium.LayerControl().add_to(ma_map) 
 
-    # --- THE RADAR LOCK RETICLE (HOVER FIX APPLIED) ---
     if universal_search and not search_failed and not map_data.empty:
         target_row = map_data.iloc[0]
-        # Replaced the blocking circle with a single, highly distinct target marker.
         folium.Marker(
             location=[target_row['Lat'], target_row['Lon']],
             icon=folium.Icon(color='red', icon='star', prefix='fa'),
