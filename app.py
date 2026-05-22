@@ -4,101 +4,86 @@ import folium
 from streamlit_folium import st_folium
 import math
 
-# --- DASHBOARD CONFIGURATION ---
-st.set_page_config(page_title="MA Resilience & Strategy Dashboard", page_icon="📊", layout="wide")
-
+# --- CONFIG ---
+st.set_page_config(page_title="MA Grid Intelligence", page_icon="📊", layout="wide")
 st.title("MA Resilience & Strategy Dashboard")
-st.markdown("Enterprise pipeline intelligence, capacity mapping, and financial exposure tracking.")
-st.divider()
+st.markdown("Automated pipeline intelligence and financial risk tracking.")
 
-# --- THE AUTOMATED DATA ENGINE ---
+# --- DATA ENGINE ---
 @st.cache_data
 def process_data():
     try:
-        # Load your Master Pipeline CSV
+        # Load the master pipeline
         df = pd.read_csv("master_pipeline.csv")
         
-        # Mapping columns to clean names for the dashboard
+        # 1. Deduplication: The "Clean Sweep"
+        df = df.drop_duplicates()
+        
+        # 2. Rename columns for clarity
         rename_map = {
             'Project: Service Contract: Service Contract Event: Job Code': 'Job Code',
             'Line Item Price to Customer': 'TU_Cost',
-            'Project: Service Contract: Service Contract Event: PTO Recorded Date': 'PTO Date',
-            'Project: Service Contract: Install Date': 'Install Date',
             'SOW Proposal Summary: Project: Service Contract: Status': 'Status',
-            'Project: Service Contract: Service Contract Event: CAP date approved': 'CAP Date'
+            'City': 'City',
+            'Created Date': 'Created Date',
+            'Address': 'Address'
         }
         df = df.rename(columns=rename_map)
         
-        # Clean Dates
+        # 3. Handle Financials
+        df['TU_Cost'] = pd.to_numeric(df['TU_Cost'], errors='coerce').fillna(0)
+        
+        # 4. Handle Dates & Years
         df['Created Date'] = pd.to_datetime(df['Created Date'], errors='coerce')
         df['Year'] = df['Created Date'].dt.year.fillna(0).astype(int)
         
-        # Clean Financials
-        df['TU_Cost'] = pd.to_numeric(df['TU_Cost'], errors='coerce').fillna(0)
-        
-        # Clean City/Zip (Using Address string to extract info)
-        df['City'] = df['City'].astype(str).str.title()
-        
-        # Simplified Status Categories
+        # 5. Clean Status
         df['Status_Clean'] = df['Status'].apply(lambda x: 'Cancelled' if 'Cancelled' in str(x) else ('Complete' if 'Complete' in str(x) else 'Active'))
+        
+        # 6. Basic Geocoding Helper
+        # In a production environment, this dictionary is your "ground truth"
+        ma_coords = {"Fitchburg": (42.583, -71.802), "Springfield": (42.101, -72.589), "Brockton": (42.083, -71.018), 
+                     "Ludlow": (42.160, -72.474), "Methuen": (42.726, -71.190), "Lee": (42.304, -73.249), "Boston": (42.360, -71.058)}
+        
+        df['Lat'] = df['City'].apply(lambda c: ma_coords.get(c, 42.25)[0])
+        df['Lon'] = df['City'].apply(lambda c: ma_coords.get(c, -71.80)[1])
         
         return df
     except Exception as e:
-        st.error(f"Error processing data: {e}")
+        st.error(f"Data Load Error: {e}")
         return pd.DataFrame()
 
 df = process_data()
 
-# --- SIDEBAR FILTERS ---
-st.sidebar.header("🔍 Filters")
-filter_year = st.sidebar.selectbox("Year Invoiced", ["All Years"] + sorted(df['Year'].unique().tolist(), reverse=True))
-filter_status = st.sidebar.multiselect("Project Status", df['Status_Clean'].unique().tolist(), default=df['Status_Clean'].unique().tolist())
-filter_util = st.sidebar.multiselect("Utility Company", df['Utility Company'].unique().tolist(), default=df['Utility Company'].unique().tolist())
+# --- FILTERING ---
+st.sidebar.header("Filters")
+selected_year = st.sidebar.selectbox("Year", ["All"] + sorted(df['Year'].unique().tolist(), reverse=True))
+selected_status = st.sidebar.multiselect("Status", df['Status_Clean'].unique().tolist(), default=df['Status_Clean'].unique().tolist())
 
-# Apply Filtering
 data = df.copy()
-if filter_year != "All Years": data = data[data['Year'] == filter_year]
-data = data[data['Status_Clean'].isin(filter_status)]
-data = data[data['Utility Company'].isin(filter_util)]
+if selected_year != "All": data = data[data['Year'] == selected_year]
+data = data[data['Status_Clean'].isin(selected_status)]
 
-# --- KPI DASHBOARD ---
-col1, col2, col3, col4 = st.columns(4)
-col1.metric("Total Exposure", f"${data['TU_Cost'].sum():,.2f}")
-col2.metric("Active Projects", len(data[data['Status_Clean'] == 'Active']))
-col3.metric("Cancelled Value", f"${data[data['Status_Clean'] == 'Cancelled']['TU_Cost'].sum():,.2f}")
-col4.metric("Avg Invoice", f"${data['TU_Cost'].mean():,.2f}")
+# --- KPI METRICS ---
+c1, c2, c3 = st.columns(3)
+c1.metric("Total Exposure", f"${data['TU_Cost'].sum():,.2f}")
+c2.metric("Project Count", len(data))
+c3.metric("Avg Invoice", f"${data['TU_Cost'].mean():,.2f}")
 st.divider()
 
-# --- TREND ANALYSIS ---
-st.subheader("📈 Financial Trend Analysis")
-trend_data = data.groupby('Year')['TU_Cost'].sum().reset_index()
-st.line_chart(trend_data.set_index('Year'))
-
-# --- MAP ENGINE ---
-st.subheader("🗺️ Geographic Saturation")
-# Simple Lat/Lon simulation based on city (You can refine this with real lat/lon in your CSV)
-# For the map to work, ensure 'Lat' and 'Lon' exist in your CSV or add them here:
-if 'Lat' not in data.columns:
-    data['Lat'] = 42.25 # Default MA Lat
-    data['Lon'] = -71.80 # Default MA Lon
-
+# --- MAP ---
+st.subheader("Interactive Saturation Map")
 m = folium.Map(location=[42.25, -71.80], zoom_start=8, tiles="CartoDB dark_matter")
+
 for _, row in data.iterrows():
+    color = "white" if row['Status_Clean'] == 'Active' else ("blue" if row['Status_Clean'] == 'Complete' else "red")
     folium.CircleMarker(
-        location=[row['Lat'], row['Lon']],
-        radius=5,
-        color="white" if row['Status_Clean'] == 'Active' else "red",
-        tooltip=f"{row['City']} - ${row['TU_Cost']:,.2f}"
+        [row['Lat'], row['Lon']],
+        radius=7,
+        color=color,
+        fill=True,
+        fill_opacity=0.7,
+        tooltip=f"{row['City']} | {row['Job Code']} | ${row['TU_Cost']:,.2f}"
     ).add_to(m)
 
-st_folium(m, width=1000)
-
-# --- STRATEGY MATRIX ---
-st.subheader("🏛️ Strategy Actions")
-tab1, tab2 = st.tabs(["CX & Sales", "Design Engineering"])
-
-with tab1:
-    st.write("Focus on high-value clusters in Fitchburg/Springfield. Prepare customers for 4-8 week delays if located in saturated circuits.")
-
-with tab2:
-    st.write("Review SLD compliance for projects over 25kW. Implement PCS export limiting where necessary to avoid complex studies.")
+st_folium(m, width=1000, height=500)
