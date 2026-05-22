@@ -34,7 +34,6 @@ def load_and_clean_data():
     
     df['Year'] = df['Created Date'].apply(lambda x: x.year if pd.notnull(x) else 0).astype(int)
     
-    # TRUE CYCLE TIME: CAP to PTO
     df['Cycle Time'] = (df['PTO Date'] - df['CAP Date']).dt.days
     df['Cycle Time'] = df['Cycle Time'].apply(lambda x: x if pd.notnull(x) and x >= 0 else np.nan)
     
@@ -47,7 +46,6 @@ def load_and_clean_data():
     df['Battery'] = df['Battery'].astype(str).str.upper().isin(['TRUE', 'YES', '1'])
     df['City'] = df['City'].astype(str).str.title().str.strip()
     
-    # Utility Cleanup
     df['Utility'] = df['Utility'].astype(str).str.upper()
     df['Utility'] = df['Utility'].replace({'NATIONAL GRID': 'National Grid', 'EVERSOURCE': 'Eversource', 'WMECO': 'WMECO', 'UNITIL': 'UNITIL'})
     
@@ -85,12 +83,14 @@ st.subheader("Interactive Saturation Map")
 st.caption("🟢 Complete (Clean Energy) | 🟡 Active (Solar/Waiting) | 🔴 Cancelled (Grid Friction) | 🧿 **Cyan Border = Battery Included**")
 m = folium.Map(location=[42.25, -71.80], zoom_start=8, tiles="CartoDB dark_matter")
 
-# Core MA Cities
+# Expanded Coastal & Core Cities
 ma_coords = {
     "Abington": (42.104, -70.945), "Acton": (42.485, -71.432), "Agawam": (42.069, -72.615), "Amesbury": (42.858, -70.930),
     "Amherst": (42.380, -72.523), "Andover": (42.658, -71.136), "Boston": (42.360, -71.058), "Brockton": (42.083, -71.018), 
     "Fitchburg": (42.583, -71.802), "Springfield": (42.101, -72.589), "Ludlow": (42.160, -72.474), "Methuen": (42.726, -71.190), 
-    "Lee": (42.304, -73.249), "Worcester": (42.262, -71.802), "Ashby": (42.678, -71.819), "Medford": (42.418, -71.106)
+    "Lee": (42.304, -73.249), "Worcester": (42.262, -71.802), "Ashby": (42.678, -71.819), "Medford": (42.418, -71.106),
+    "Plymouth": (41.958, -70.667), "Salem": (42.519, -70.896), "Lynn": (42.466, -70.949), "Quincy": (42.252, -71.002),
+    "Fall River": (41.701, -71.155), "New Bedford": (41.636, -70.934), "Gloucester": (42.615, -70.661), "Cambridge": (42.373, -71.109)
 }
 
 def get_stable_hash(s):
@@ -103,15 +103,15 @@ if not data.empty:
         if city_name in ma_coords:
             base_lat, base_lon = ma_coords[city_name]
         else:
-            # SMART-SPREAD FALLBACK: Distributes unknown cities evenly across MA bounds
+            # THE FIX: Safe Inland Bounding Box (Central MA only, keeps dots out of the Atlantic)
             city_hash = get_stable_hash(city_name)
-            base_lat = 41.5 + (city_hash % 130) / 100.0      # Maps to MA Lat range (41.5 - 42.8)
-            base_lon = -73.3 + ((city_hash // 100) % 330) / 100.0 # Maps to MA Lon range (-73.3 - -70.0)
+            base_lat = 42.1 + (city_hash % 50) / 100.0        # 42.1 to 42.6 Lat
+            base_lon = -72.8 + ((city_hash // 100) % 130) / 100.0   # -72.8 to -71.5 Lon
         
-        # JITTER ENGINE: Spreads overlapping dots within the same city
+        # THE FIX: Tighter Swarm Radius (Divisor increased from 800 to 1400)
         job_hash = get_stable_hash(row['Job Code'])
-        offset_lat = base_lat + ((job_hash % 100) - 50) / 800.0 
-        offset_lon = base_lon + (((job_hash // 100) % 100) - 50) / 800.0
+        offset_lat = base_lat + ((job_hash % 100) - 50) / 1400.0 
+        offset_lon = base_lon + (((job_hash // 100) % 100) - 50) / 1400.0
         
         # Color Logic
         if row['Status_Clean'] == 'Active': fill_color = "#FFC107"
