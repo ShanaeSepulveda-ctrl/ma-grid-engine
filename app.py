@@ -80,8 +80,9 @@ col3.metric("Battery-Ready", len(data[data['Battery'] == True]))
 col4.metric("Avg Cycle Time", f"{data['Cycle Time'].mean():.0f} Days" if not data['Cycle Time'].isna().all() else "N/A")
 st.divider()
 
-# --- MAP ENGINE (WITH RESTORED MASSIVE DICTIONARY & JITTER) ---
+# --- MAP ENGINE ---
 st.subheader("Interactive Saturation Map")
+st.caption("🟢 Complete (Clean Energy) | 🟡 Active (Solar/Waiting) | 🔴 Cancelled (Grid Friction)")
 m = folium.Map(location=[42.25, -71.80], zoom_start=8, tiles="CartoDB dark_matter")
 
 # Restored Master Coordinates
@@ -114,72 +115,22 @@ ma_coords = {
 
 if not data.empty:
     for _, row in data.iterrows():
-        # Get base coordinates
         base_lat, base_lon = ma_coords.get(row['City'], (42.25, -71.80))
         
-        # RESTORED JITTER ENGINE: Separates overlapping dots in the same city
+        # Jitter Engine (prevents dots from stacking completely on top of each other)
         offset_lat = base_lat + (hash(str(row['Job Code'])) % 100) / 10000.0
         offset_lon = base_lon + (hash(str(row['Job Code']) + "x") % 100) / 10000.0
         
-        # Colors
-        color = "white" if row['Status_Clean'] == 'Active' else ("#00a8ff" if row['Status_Clean'] == 'Complete' else "red")
+        # --- THE NEW SOLAR/GRID COLOR SCHEME ---
+        if row['Status_Clean'] == 'Active': 
+            color = "#FFC107" # Solar Amber (Waiting/Caution)
+        elif row['Status_Clean'] == 'Complete': 
+            color = "#00E676" # Clean Energy Green (Success)
+        else: 
+            color = "#FF3D00" # Grid Friction Red/Orange (Cancelled/Failed)
         
-        # Clean Vertical Tooltip
         tooltip_html = f"""
         <div style='font-family:sans-serif; width: 160px;'>
             <b>{row['Job Code']}</b><hr style='margin: 5px 0;'>
             <b>Status:</b> {row['Status_Clean']}<br>
-            <b>Battery:</b> {'Yes' if row['Battery'] else 'No'}<br>
-            <b>Cost:</b> ${row['TU_Cost']:,.0f}<br>
-            <b>City:</b> {row['City']}
-        </div>
-        """
-        
-        folium.CircleMarker(
-            [offset_lat, offset_lon], 
-            radius=6, 
-            color=color, 
-            fill=True, 
-            fill_opacity=0.8,
-            tooltip=folium.Tooltip(tooltip_html)
-        ).add_to(m)
-
-st_folium(m, width=1000, height=500)
-
-# --- RESTORED TRENDS ENGINE ---
-st.divider()
-col_trend, col_cycle = st.columns(2)
-
-with col_trend:
-    st.subheader("📈 YoY Financial Exposure")
-    trend_data = data[data['Year'] > 2000].groupby('Year')['TU_Cost'].sum()
-    st.bar_chart(trend_data)
-
-with col_cycle:
-    st.subheader("⏱️ Avg Cycle Time (By Year)")
-    # Show cycle time trends over the years
-    cycle_trend = data[data['Year'] > 2000].groupby('Year')['Cycle Time'].mean()
-    st.line_chart(cycle_trend)
-
-# --- STRATEGY TABS ---
-st.divider()
-st.subheader("3. Cross-Functional Strategy Matrix")
-
-tab1, tab2, tab3 = st.tabs(["🤝 CX & Sales", "📐 Design & Engineering", "🏛️ Policy & Exec Insights"])
-
-with tab1:
-    st.write("Targeting high-value clusters. Provide customers with realistic 4-8 week expectation windows in Red/High-Friction zones.")
-with tab2:
-    st.write("Maintain SLD compliance on projects > 25kW. Utilize battery storage to offset grid upgrade requirements.")
-with tab3:
-    st.markdown("""
-    ### Utility Efficiency Benchmarks (Cycle Time)
-    * **United Illuminating:** 316.0 days
-    * **National Grid:** 289.1 days
-    * **UNITIL:** 231.9 days
-    * **WMECO:** 215.0 days
-    * **Eversource:** 196.3 days
-    * **Green Mountain Power:** 135.2 days
-    
-    **Strategic Takeaway:** We are currently seeing a ~250 day total cycle time from CAP approval to PTO. Reducing this duration in the 'Install to PTO' phase (140 days avg) offers our highest opportunity for margin recovery. There is no direct correlation between the expense amount and the cycle time.
-    """)
+            <b>Battery:</b> {'Yes' if row['Battery'] else '
