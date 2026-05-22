@@ -11,81 +11,80 @@ st.title("MA Resilience & Strategy Dashboard")
 st.markdown("Enterprise pipeline intelligence, capacity mapping, and financial exposure tracking.")
 st.divider()
 
-# --- THE LIVE AUTOMATED INGESTION ENGINE (Refreshes every 1 Hour) ---
-@st.cache_data(ttl=3600)
+# --- THE GITHUB AUTOMATED INGESTION ENGINE ---
+@st.cache_data
 def process_data():
-    live_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTt6IQA-3Ee4DrzafeU8MZntRmF37kg83tFfw4f24ci-tFtvRxT0goN-KqyuA9IqP_Catwo3dw3hdpx/pub?gid=0&single=true&output=csv"
+    df_list = []
     
-    try:
-        df = pd.read_csv(live_url)
-        
-        # 1. Status Extraction
-        if 'Project Status:' in df.columns:
-            df['Status'] = df['Project Status:'].astype(str).str.title().str.strip()
-        elif 'Project Status' in df.columns:
-            df['Status'] = df['Project Status'].astype(str).str.title().str.strip()
-        elif 'Status' in df.columns:
-            df['Status'] = df['Status'].astype(str).str.title().str.strip()
-        else:
-            df['Status'] = "Unknown"
+    files_to_try = [
+        ("active_projects.csv", "Open"),
+        ("cancelled_projects.csv", "Cancelled"),
+        ("master_pipeline.csv", "Unknown") 
+    ]
+    
+    for filename, default_status in files_to_try:
+        try:
+            df = pd.read_csv(filename)
             
-        # 2. City Extraction
-        if 'Jurisdiction: Jurisdiction Name' in df.columns:
-            df['City'] = df['Jurisdiction: Jurisdiction Name'].astype(str).str.replace('MA-TOWN ', '', case=False).str.replace('MA-CITY ', '', case=False)
-        elif 'City' not in df.columns:
-            df['City'] = "Unknown"
-        
-        # 3. Cost Extraction
-        if 'Line Item Price to Customer' in df.columns:
-            df['TU_Cost'] = df['Line Item Price to Customer']
-        elif 'TU Invoice Amount:' in df.columns:
-            df['TU_Cost'] = df['TU Invoice Amount:']
-        elif 'TU Invoice' in df.columns:
-            df['TU_Cost'] = df['TU Invoice']
-        elif 'Total Cost' in df.columns:
-            df['TU_Cost'] = df['Total Cost']
-        else:
-            df['TU_Cost'] = 0.0
-        
-        # 4. Utility Extraction
-        if 'Utility' in df.columns and 'Utility Company' not in df.columns:
-            df['Utility Company'] = df['Utility']
+            if 'Project Status:' in df.columns:
+                df['Status'] = df['Project Status:'].astype(str).str.title().str.strip()
+            elif 'Project Status' in df.columns:
+                df['Status'] = df['Project Status'].astype(str).str.title().str.strip()
+            elif 'Status' in df.columns:
+                df['Status'] = df['Status'].astype(str).str.title().str.strip()
+            else:
+                df['Status'] = default_status
+                
+            if 'Jurisdiction: Jurisdiction Name' in df.columns:
+                df['City'] = df['Jurisdiction: Jurisdiction Name'].astype(str).str.replace('MA-TOWN ', '', case=False).str.replace('MA-CITY ', '', case=False)
             
-        # 5. SMART ZIP CODE EXTRACTION
-        if 'Zip Code:' in df.columns:
-            df['Zip Code'] = df['Zip Code:']
-        elif 'Zip Code' in df.columns:
+            if 'Line Item Price to Customer' in df.columns:
+                df['TU_Cost'] = df['Line Item Price to Customer']
+            elif 'TU Invoice Amount:' in df.columns:
+                df['TU_Cost'] = df['TU Invoice Amount:']
+            elif 'TU Invoice' in df.columns:
+                df['TU_Cost'] = df['TU Invoice']
+            elif 'Total Cost' in df.columns:
+                df['TU_Cost'] = df['Total Cost']
+            
+            if 'Utility' in df.columns and 'Utility Company' not in df.columns:
+                df['Utility Company'] = df['Utility']
+                
+            if 'Zip Code:' in df.columns:
+                df['Zip Code'] = df['Zip Code:']
+            elif 'Zip Code' in df.columns:
+                pass
+            elif 'Full Address' in df.columns:
+                df['Zip Code'] = df['Full Address'].astype(str).str.extract(r'(\b\d{5}\b)')
+            elif 'Address' in df.columns:
+                df['Zip Code'] = df['Address'].astype(str).str.extract(r'(\b\d{5}\b)')
+            else:
+                df['Zip Code'] = "Unknown"
+                
+            if 'BrightBox' in df.columns:
+                df['Battery'] = df['BrightBox'].astype(str).str.upper().isin(['TRUE', 'YES', 'Y', '1'])
+            else:
+                df['Battery'] = False
+                
+            if 'Year Invoiced' in df.columns:
+                df['Year'] = df['Year Invoiced'].astype(str).str.replace('.0', '', regex=False).str.strip()
+            elif 'Permit Approval Date' in df.columns:
+                df['Year'] = df['Permit Approval Date'].astype(str).str.extract(r'(\d{4})')
+            elif 'Created Date' in df.columns:
+                df['Year'] = df['Created Date'].astype(str).str.extract(r'(\d{4})')
+            elif 'Project Year' in df.columns:
+                df['Year'] = df['Project Year'].astype(str).str.replace('.0', '', regex=False).str.strip()
+            else:
+                df['Year'] = "All Time"
+                
+            df_list.append(df)
+        except FileNotFoundError:
             pass
-        elif 'Full Address' in df.columns:
-            df['Zip Code'] = df['Full Address'].astype(str).str.extract(r'(\b\d{5}\b)')
-        elif 'Address' in df.columns:
-            df['Zip Code'] = df['Address'].astype(str).str.extract(r'(\b\d{5}\b)')
-        else:
-            df['Zip Code'] = "Unknown"
-            
-        # 6. Battery Extraction
-        if 'BrightBox' in df.columns:
-            df['Battery'] = df['BrightBox'].astype(str).str.upper().isin(['TRUE', 'YES', 'Y', '1'])
-        else:
-            df['Battery'] = False
-            
-        # 7. TEMPORAL EXTRACTION
-        if 'Year Invoiced' in df.columns:
-            df['Year'] = df['Year Invoiced'].astype(str).str.replace('.0', '', regex=False).str.strip()
-        elif 'Permit Approval Date' in df.columns:
-            df['Year'] = df['Permit Approval Date'].astype(str).str.extract(r'(\d{4})')
-        elif 'Created Date' in df.columns:
-            df['Year'] = df['Created Date'].astype(str).str.extract(r'(\d{4})')
-        elif 'Project Year' in df.columns:
-            df['Year'] = df['Project Year'].astype(str).str.replace('.0', '', regex=False).str.strip()
-        else:
-            df['Year'] = "All Time"
 
-    except Exception as e:
-        st.error(f"Live Data Bridge Offline: Unable to read Google Sheets URL. ({e})")
+    if not df_list:
         return pd.DataFrame(), []
 
-    df_master = df.copy()
+    df_master = pd.concat(df_list, ignore_index=True)
     
     # --- SANITIZATION & CLEANING ---
     df_master['Job Code'] = df_master['Job Code'].astype(str).str.strip() if 'Job Code' in df_master.columns else "Unknown"
@@ -96,7 +95,6 @@ def process_data():
     df_unknown_jobs = df_master[df_master['Job Code'] == 'Unknown']
     df_master = pd.concat([df_valid_jobs, df_unknown_jobs], ignore_index=True)
 
-    # The Smart Zip Code Parser
     def clean_zip(z):
         z_str = str(z).split('.')[0] 
         digits = ''.join(filter(str.isdigit, z_str))
@@ -189,4 +187,285 @@ def process_data():
     
     missing_cities = df_master[df_master['Lat'].isna()]['City'].unique().tolist()
     
-    return df_master, missing_
+    return df_master, missing_cities
+
+# Execute loader
+raw_data, unmapped_cities = process_data()
+
+# --- SIDEBAR: THE UNIVERSAL SMART SEARCH ---
+if not raw_data.empty:
+    st.sidebar.header("🔍 Universal Pipeline Search")
+    universal_search = st.sidebar.text_input("Search by Job Code, City, or Zip Code:", placeholder="e.g., 221R-057, Boston, 02108")
+    st.sidebar.divider()
+    
+    st.sidebar.header("📊 Market Analytics Filters")
+    
+    valid_years = sorted([y for y in raw_data['Year'].unique() if y not in ['All Time', 'nan', 'Unknown']], reverse=True)
+    if valid_years:
+        available_years = ["All Years"] + valid_years
+        filter_year = st.sidebar.selectbox("Year Invoiced", available_years)
+    else:
+        filter_year = "All Years"
+        
+    valid_statuses = [s for s in raw_data['Status'].unique() if s not in ['Unknown', 'nan']]
+    available_statuses = ["All"] + sorted(valid_statuses)
+    filter_status = st.sidebar.radio("Project Lifecycle Stage", available_statuses)
+    filter_battery = st.sidebar.radio("System Design Type", ["All Systems", "Battery Included", "Solar Only"])
+    filter_cost = st.sidebar.selectbox("Financial Risk Threshold", [
+        "All Projects", 
+        "Projects > $0 (Flagged)", 
+        "Projects > $10,000", 
+        "Projects > $20,000",
+        "Projects > $30,000",
+        "Projects > $40,000"
+    ])
+    all_utils = sorted([str(u) for u in raw_data['Utility Company'].unique() if u != 'Unknown Utility'])
+    filter_utility = st.sidebar.multiselect("Utility Provider", all_utils, default=all_utils)
+
+    # --- APPLY FILTERS ---
+    grid_data = raw_data.copy()
+    search_failed = False
+    
+    if universal_search:
+        search_term = universal_search.lower().strip()
+        mask = (
+            grid_data['Job Code'].str.lower().str.contains(search_term, na=False) |
+            grid_data['City'].str.lower().str.contains(search_term, na=False) |
+            grid_data['Zip Code'].str.contains(search_term, na=False)
+        )
+        grid_data = grid_data[mask]
+        
+        if grid_data.empty:
+            st.sidebar.error(f"No pipeline results found for '{universal_search}'.")
+            grid_data = raw_data.copy() 
+            search_failed = True
+    else:
+        if filter_year != "All Years":
+            grid_data = grid_data[grid_data['Year'] == filter_year]
+        if filter_status != "All":
+            grid_data = grid_data[grid_data['Status'] == filter_status]
+        if filter_battery == "Battery Included":
+            grid_data = grid_data[grid_data['Battery'] == True]
+        elif filter_battery == "Solar Only":
+            grid_data = grid_data[grid_data['Battery'] == False]
+        
+        if filter_cost == "Projects > $0 (Flagged)":
+            grid_data = grid_data[grid_data['TU_Cost'] > 0]
+        elif filter_cost == "Projects > $10,000":
+            grid_data = grid_data[grid_data['TU_Cost'] > 10000]
+        elif filter_cost == "Projects > $20,000":
+            grid_data = grid_data[grid_data['TU_Cost'] > 20000]
+        elif filter_cost == "Projects > $30,000":
+            grid_data = grid_data[grid_data['TU_Cost'] > 30000]
+        elif filter_cost == "Projects > $40,000":
+            grid_data = grid_data[grid_data['TU_Cost'] > 40000]
+            
+        if filter_utility:
+            grid_data = grid_data[grid_data['Utility Company'].isin(filter_utility)]
+
+else:
+    grid_data = pd.DataFrame()
+    st.info("🚨 **System Note:** No pipeline data found. Please ensure 'master_pipeline.csv' is uploaded to your GitHub repository.")
+
+# --- PROFESSIONAL FINANCIAL KPI PANEL ---
+if not grid_data.empty:
+    total_tu_invoiced = grid_data['TU_Cost'].sum()
+    flagged_projects = grid_data[grid_data['TU_Cost'] > 0]
+    avg_tu_cost = flagged_projects['TU_Cost'].mean() if not flagged_projects.empty else 0
+    total_projects_flagged = len(flagged_projects)
+    
+    header_title = f"### 📈 Live Pipeline Financial Overview ({filter_year})" if filter_year != "All Years" else "### 📈 Live Pipeline Financial Overview"
+    st.markdown(header_title)
+    
+    col_kpi1, col_kpi2, col_kpi3, col_kpi4 = st.columns(4)
+    col_kpi1.metric("Total TU Invoice Exposure", f"${total_tu_invoiced:,.2f}")
+    col_kpi2.metric("Projects with TU Exposure", total_projects_flagged)
+    col_kpi3.metric("Average Upgrade Invoice", f"${avg_tu_cost:,.2f}")
+    highest_util = grid_data['Utility Company'].mode()[0] if not grid_data['Utility Company'].empty else "Unknown"
+    col_kpi4.metric("Utility with Highest TU Frequency", highest_util)
+    st.divider()
+
+# --- THE MULTI-LAYER HOVER MAP ENGINE ---
+if not grid_data.empty:
+    st.subheader("🗺️ Enterprise Saturation Map")
+    st.caption("Map updates dynamically. Open = White | Complete = Sapphire Blue | Cancelled = Dashed. **Hover over dots for project data.**")
+
+    start_lat, start_lon, start_zoom = 42.25, -71.80, 8
+    
+    if universal_search and not search_failed and not grid_data.empty:
+        if pd.notna(grid_data.iloc[0]['Lat']):
+            start_lat, start_lon, start_zoom = grid_data.iloc[0]['Lat'], grid_data.iloc[0]['Lon'], 14
+
+    ma_map = folium.Map(location=[start_lat, start_lon], zoom_start=start_zoom, tiles="CartoDB dark_matter")
+
+    map_data = grid_data.dropna(subset=['Lat', 'Lon'])
+    
+    if not map_data.empty:
+        city_summary = map_data.groupby(['City', 'Zip Code', 'Status', 'Job Code']).agg({
+            'TU_Cost': 'sum',
+            'Utility Company': 'first',
+            'Battery': 'first',
+            'Year': 'first',
+            'Lat': 'first',
+            'Lon': 'first'
+        }).reset_index()
+        
+        statuses_present = city_summary['Status'].unique()
+        feature_groups = {s: folium.FeatureGroup(name=f"{s} Projects") for s in statuses_present}
+        
+        for _, row in city_summary.iterrows():
+            offset_lat = row['Lat'] + (hash(row['Job Code']) % 100) / 10000.0
+            offset_lon = row['Lon'] + (hash(row['Job Code'] + "x") % 100) / 10000.0
+                
+            if row['TU_Cost'] > 10000:
+                risk_color = "#ff4b4b" 
+            elif row['TU_Cost'] > 0:
+                risk_color = "#ffc107" 
+            else:
+                risk_color = "#00cc66" 
+                
+            if row['Status'] == 'Cancelled':
+                border_color = risk_color
+                weight = 3
+                dash = '5, 5'
+            elif row['Status'] == 'Complete':
+                border_color = "#00a8ff" 
+                weight = 3
+                dash = None
+            else:
+                border_color = "#ffffff" 
+                weight = 2
+                dash = None
+                
+            battery_badge = "<br><b>🔋 Includes Battery Storage</b>" if row['Battery'] else ""
+            year_badge = f" | {row['Year']}" if row['Year'] != "All Time" else ""
+            
+            hover_text = f"<b>{row['City']}, MA {row['Zip Code']} ({row['Status']}{year_badge})</b><br>Job: {row['Job Code']}<br>Utility: {row['Utility Company']}<br>TU Invoice Amount: ${row['TU_Cost']:,.2f}{battery_badge}"
+                
+            folium.CircleMarker(
+                location=[offset_lat, offset_lon],
+                radius=8 if row['TU_Cost'] == 0 else 12,
+                tooltip=hover_text,  
+                popup=hover_text,    
+                color=border_color,
+                fill=True,
+                fill_color=risk_color,
+                fill_opacity=0.8,
+                weight=weight,
+                dash_array=dash
+            ).add_to(feature_groups[row['Status']])
+
+        for fg in feature_groups.values():
+            fg.add_to(ma_map)
+        folium.LayerControl().add_to(ma_map) 
+
+    if universal_search and not search_failed and not map_data.empty:
+        target_row = map_data.iloc[0]
+        folium.Marker(
+            location=[target_row['Lat'], target_row['Lon']],
+            icon=folium.Icon(color='red', icon='star', prefix='fa'),
+            tooltip=f"🎯 Target Lock: {target_row['City']}"
+        ).add_to(ma_map)
+
+    st_folium(ma_map, width=1200, height=550, returned_objects=[])
+
+# --- TARGET MARKET SELECTION & STRATEGY ---
+if not grid_data.empty:
+    st.divider()
+    st.subheader("2. System Design & Capacity Diagnostics")
+    
+    col1, col2 = st.columns([1, 2])
+    
+    available_cities = ["Statewide Overview"]
+    unique_cities = sorted([str(city) for city in grid_data['City'].unique()])
+    available_cities += unique_cities
+
+    if universal_search and not search_failed and not grid_data.empty:
+        default_city = grid_data.iloc[0]['City']
+        try:
+            city_index = available_cities.index(default_city)
+        except ValueError:
+            city_index = 0
+    else:
+        city_index = 0
+
+    with col1:
+        selected_city = st.selectbox("Select Target MA City for Analysis", available_cities, index=city_index)
+        target_found = selected_city != "Statewide Overview"
+
+    with col2:
+        st.markdown("**Test Proposed AC Design:**")
+        c_a, c_b = st.columns(2)
+        with c_a:
+            existing_kw = st.number_input("Existing Solar (kW AC)", min_value=0.0, max_value=50.0, value=0.0, step=0.5)
+        with c_b:
+            new_kw = st.number_input("New System Capacity (kW AC)", min_value=0.0, max_value=50.0, value=10.0, step=0.5)
+    
+    if target_found:
+        total_kw = existing_kw + new_kw
+        is_complex_review = total_kw > 25.0
+        
+        city_history = raw_data[raw_data['City'] == selected_city]
+        historical_exposure = city_history['TU_Cost'].mean() if not city_history.empty else 0
+        
+        if is_complex_review or historical_exposure > 5000:
+            timeline_status = "4-8 Weeks (Complex Review)"
+            risk_level = "Red"
+        elif historical_exposure > 0:
+            timeline_status = "2-4 Weeks (Moderate)"
+            risk_level = "Yellow"
+        else:
+            timeline_status = "1-2 Weeks (Simplified)"
+            risk_level = "Green"
+
+        st.divider()
+        col_a, col_b, col_c = st.columns(3)
+        col_a.metric("Design: Total Parcel AC", f"{total_kw} kW", "- Complex Review Triggered" if is_complex_review else "+ Simplified Track", delta_color="inverse")
+        col_b.metric("CX/Sales: Expected Approval Timeline", timeline_status)
+        col_c.metric("Finance: Est. Sunk Margin Risk", f"${historical_exposure + 2000:,.0f}" if historical_exposure > 0 else "$2,000", "High Risk" if risk_level == "Red" else "Acceptable", delta_color="inverse")
+
+        with st.expander("📊 Defensible Data Methodology (Analyst Notes)"):
+            st.markdown("""
+            **How is Est. Sunk Margin Risk Calculated?**
+            * **Baseline Sunk OpEx:** `$2,000` (Estimated standard Site Survey + Design Labor + CX Admin execution cost).
+            * **Transformer Upgrade (TU) Exposure:** Derived directly from the historical pipeline data average for the filtered geographic location.
+            * **Formula:** `Historical Local TU Average + Baseline Sunk OpEx = Est. Sunk Margin Risk`.
+            """)
+
+        st.divider()
+        st.subheader("3. Cross-Functional Strategy Matrix")
+        
+        tab_cx, tab_design, tab_policy = st.tabs(["🤝 Sales & CX Actions", "📐 Design Engineering Actions", "🏛️ Policy & Exec Actions"])
+        
+        with tab_cx:
+            if risk_level == "Red":
+                st.error("**High Friction Zone:** Reps must set timeline expectations of 4-8+ weeks for utility review. Prepare the customer for potential upgrade fees upfront to prevent late-stage cancellations.")
+            elif risk_level == "Yellow":
+                st.warning("**Moderate Friction Zone:** Standard timelines may be delayed. Monitor Interconnection queues closely and proactively communicate 2-4 week review periods.")
+            else:
+                st.success("**Clearance Zone:** Green light for standard sales pitch. Expect rapid 1-2 week utility approvals.")
+                
+        with tab_design:
+            if is_complex_review:
+                st.error(f"**System Modification Recommended:** Parcel AC ({total_kw}kW) exceeds the 25kW Simplified Track limit. Evaluate Power Control Systems (PCS) to hard-cap export below 25kW, or configure ESS for non-export to bypass Complex Study queues.")
+            elif risk_level == "Red":
+                st.error(f"**Grid Saturation Alert:** While the system size ({total_kw}kW) is under the 25kW limit, the targeted area has a history of highly saturated transformers. Design conservatively. The utility may force secondary transformer upgrades regardless of system size.")
+            elif risk_level == "Yellow":
+                st.warning(f"**Moderate Congestion:** Standard AC sizing is acceptable, but ensure perfect SLD compliance to avoid administrative kickbacks in group study queues.")
+            else:
+                st.success(f"**Standard Design:** System size ({total_kw}kW) falls within Simplified thresholds and local grid capacity is historically open.")
+                
+        with tab_policy:
+            if risk_level == "Red" or risk_level == "Yellow":
+                util_name = city_history['Utility Company'].mode()[0] if not city_history.empty else "Utility"
+                st.info(f"**Lobbying Target:** {selected_city} is demonstrating repeated congestion with {util_name}. Log this data for the next DPU/Policy meeting to negotiate grid upgrade fee socialization.")
+            else:
+                st.write("No immediate policy escalation required for this market view.")
+
+    st.divider()
+
+    if len(unmapped_cities) > 0:
+        with st.expander("📝 System Data Audit: Unmapped Pipeline Cities"):
+            st.write(f"**{len(unmapped_cities)} cities from the CRM export require GPS coordinate assignment.**")
+            st.write("These cities are actively included in the financial metrics above, but have been hidden from the visual map to preserve geographic integrity. Contact the Data Strategy Lead for dictionary updates.")
+            st.code(", ".join(unmapped_cities))
