@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import folium
 import hashlib
+import difflib
 from streamlit_folium import st_folium
 
 # --- PAGE CONFIG ---
@@ -140,7 +141,7 @@ ma_coords = {
 
     # Typos & Neighborhoods Explicitly found in the Dataset
     "E Bridgewtr": (42.033, -70.959), "E Falmouth": (41.551, -70.545), "E Longmeadow": (42.064, -72.511),
-    "East Longmeadow": (42.064, -72.511), "Foxboro": (42.065, -71.248), "Hyannis": (41.652, -70.288),
+    "East Longmeadow": (42.064, -72.511), "Feeding Hills": (42.069, -72.678), "Foxboro": (42.065, -71.248), "Hyannis": (41.652, -70.288),
     "Indian Orchard": (42.158, -72.502), "North Billerica": (42.576, -71.282), "North Dighton": (41.848, -71.127),
     "North Oxford": (42.158, -71.881), "South Deerfield": (42.483, -72.602), "South Easton": (42.012, -71.101),
     "Turners Falls": (42.603, -72.551), "Tyngsboro": (42.673, -71.423), "West Hatfield": (42.389, -72.621),
@@ -158,15 +159,23 @@ ma_coords = {
     "Nashua": (42.765, -71.467), "Sandown": (42.929, -71.189), "Stoddard": (43.056, -72.096), "Windham": (42.801, -71.304),
     "Barrington": (41.741, -71.312), "Woonsocket": (42.000, -71.514), "Hartford": (41.765, -72.673), "Meriden": (41.538, -72.807), 
     "Norwich": (41.524, -72.075), "Bloomfield Village": (41.832, -72.730), "Boyertown": (40.332, -75.637), "Emmaus": (40.539, -75.495),
-    "Emmaus": (40.539, -75.495)
 }
 
 def get_stable_hash(s): return int(hashlib.md5(str(s).encode('utf-8')).hexdigest(), 16)
 
-all_cities_in_data = set(data['City'].unique())
-missing_cities = sorted(list(all_cities_in_data - set(ma_coords.keys())))
+def get_mapped_city(city_name, valid_cities):
+    if city_name in valid_cities:
+        return city_name
+    matches = difflib.get_close_matches(city_name, valid_cities, n=1, cutoff=0.85)
+    if matches:
+        return matches[0]
+    return None
 
-# The Transparency Tracker (Should now drop to 0 unless an entirely new city is added tomorrow)
+all_cities_in_data = set(data['City'].unique())
+mapped_cities_in_data = {c for c in all_cities_in_data if get_mapped_city(c, ma_coords.keys())}
+missing_cities = sorted(list(all_cities_in_data - mapped_cities_in_data))
+
+# The Transparency Tracker
 if missing_cities:
     st.sidebar.divider()
     st.sidebar.warning(f"⚠️ {len(missing_cities)} New Cities Unmapped")
@@ -180,10 +189,11 @@ if not data.empty:
         raw_city = row.get('City', 'Unknown')
         h = get_stable_hash(row['Job Code'])
         
-        if raw_city in ma_coords:
-            base_lat, base_lon = ma_coords[raw_city]
+        matched_city = get_mapped_city(raw_city, ma_coords.keys())
+        
+        if matched_city:
+            base_lat, base_lon = ma_coords[matched_city]
         else:
-            # Fallback ONLY for future unknown cities added to the CRM later
             city_hash = get_stable_hash(raw_city)
             base_lat = 42.2 + (city_hash % 40) / 100.0  
             base_lon = -72.5 + ((city_hash // 100) % 90) / 100.0 
