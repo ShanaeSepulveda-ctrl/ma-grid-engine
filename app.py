@@ -33,6 +33,7 @@ def load_and_clean_data():
     df['Install Date'] = pd.to_datetime(df['Install Date'], errors='coerce')
     df['PTO Date'] = pd.to_datetime(df['PTO Date'], errors='coerce')
     
+    # Year drill-down based directly on Column J (Created Date)
     df['Year'] = df['Created Date'].apply(lambda x: x.year if pd.notnull(x) else 0).astype(int)
     
     # Accurate Cycle Times
@@ -51,7 +52,7 @@ def load_and_clean_data():
 
 df = load_and_clean_data()
 
-# --- SIDEBAR ---
+# --- SIDEBAR FILTERS ---
 st.sidebar.header("🔍 Universal Pipeline Search")
 search = st.sidebar.text_input("Search (Job, City):", placeholder="e.g., Boston")
 st.sidebar.divider()
@@ -62,7 +63,7 @@ status_filter = st.sidebar.multiselect("Project Status (Col M)", all_statuses, d
 battery_filter = st.sidebar.radio("Battery Included", ["All", "Yes", "No"], horizontal=True)
 year_filter = st.sidebar.selectbox("Year Created (Col J)", ["All"] + sorted([y for y in df['Year'].unique() if y > 0], reverse=True))
 
-# THE NEW HIGH EXPOSURE DRILL-DOWN
+# High Exposure Financial Drill-Down
 exposure_filter = st.sidebar.selectbox("High Exposure Risk", ["All Projects", "> $20,000", "> $30,000", "> $40,000"])
 
 data = df.copy()
@@ -72,7 +73,6 @@ if battery_filter == "Yes": data = data[data['Battery'] == True]
 if battery_filter == "No": data = data[data['Battery'] == False]
 if year_filter != "All": data = data[data['Year'] == year_filter]
 
-# Apply High Exposure Filter
 if exposure_filter == "> $20,000": data = data[data['TU_Cost'] > 20000]
 elif exposure_filter == "> $30,000": data = data[data['TU_Cost'] > 30000]
 elif exposure_filter == "> $40,000": data = data[data['TU_Cost'] > 40000]
@@ -82,22 +82,25 @@ col1, col2, col3, col4 = st.columns(4)
 col1.metric("Total Exposure", f"${data['TU_Cost'].sum():,.2f}")
 col2.metric("Project Count", len(data))
 col3.metric("Battery-Ready", len(data[data['Battery'] == True]))
-col4.metric("Avg Cycle (CAP to PTO)", f"{data['Cycle Time (CAP to PTO)'].mean():.0f} Days" if not data['Cycle Time (CAP to PTO)'].isna().all() else "N/A")
+col4.metric("Avg Cycle (CAP to PTO)", f"{data['Cycle Time'].mean():.0f} Days" if 'Cycle Time' in data and not data['Cycle Time'].isna().all() else f"{data['Cycle Time (CAP to PTO)'].mean():.0f} Days" if not data['Cycle Time (CAP to PTO)'].isna().all() else "N/A")
 st.divider()
 
-# --- STATEWIDE SATURATION MAP ---
+# --- GEOGRAPHIC ENGNINE ---
 st.subheader("Interactive Saturation Map")
 st.caption("🟢 Complete | 🟡 Active/Pending | 🔴 Cancelled | 🧿 **Cyan Border = Battery Included**")
 m = folium.Map(location=[42.25, -71.80], zoom_start=8, tiles="CartoDB dark_matter")
 
-# Expanded Coastal/Core Dict
+# Comprehensive Coordinate Anchor Mapping
 ma_coords = {
     "Abington": (42.104, -70.945), "Acton": (42.485, -71.432), "Agawam": (42.069, -72.615), "Amesbury": (42.858, -70.930),
-    "Amherst": (42.380, -72.523), "Andover": (42.658, -71.136), "Boston": (42.360, -71.058), "Brockton": (42.083, -71.018), 
-    "Fitchburg": (42.583, -71.802), "Springfield": (42.101, -72.589), "Ludlow": (42.160, -72.474), "Methuen": (42.726, -71.190), 
-    "Lee": (42.304, -73.249), "Worcester": (42.262, -71.802), "Ashby": (42.678, -71.819), "Medford": (42.418, -71.106),
-    "Plymouth": (41.958, -70.667), "Salem": (42.519, -70.896), "Lynn": (42.466, -70.949), "Quincy": (42.252, -71.002),
-    "Fall River": (41.701, -71.155), "New Bedford": (41.636, -70.934), "Gloucester": (42.615, -70.661), "Cambridge": (42.373, -71.109)
+    "Amherst": (42.380, -72.523), "Andover": (42.658, -71.136), "Ashby": (42.678, -71.819), "Bolton": (42.433, -71.608),
+    "Boston": (42.360, -71.058), "Braintree": (42.207, -71.000), "Brockton": (42.083, -71.018), "Cambridge": (42.373, -71.109),
+    "Dighton": (41.815, -71.126), "Fall River": (41.701, -71.155), "Fitchburg": (42.583, -71.802), "Gloucester": (42.615, -70.661),
+    "Haverhill": (42.776, -71.077), "Huntington": (42.235, -72.878), "Lawrence": (42.707, -71.163), "Lee": (42.304, -73.249),
+    "Lowell": (42.633, -71.316), "Ludlow": (42.160, -72.474), "Lynn": (42.466, -70.949), "Medford": (42.418, -71.106),
+    "Methuen": (42.726, -71.190), "New Bedford": (41.636, -70.934), "Oxford": (42.116, -71.863), "Plymouth": (41.958, -70.667),
+    "Quincy": (42.252, -71.002), "Salem": (42.519, -70.896), "Springfield": (42.101, -72.589), "Ware": (42.260, -72.241),
+    "Westminster": (42.545, -71.908), "Windham": (42.801, -71.304), "Worcester": (42.262, -71.802), "Worthington": (42.405, -72.938)
 }
 
 def get_stable_hash(s): return int(hashlib.md5(str(s).encode('utf-8')).hexdigest(), 16)
@@ -110,13 +113,11 @@ if not data.empty:
         if city_name in ma_coords:
             base_lat, base_lon = ma_coords[city_name]
         else:
-            city_hash = get_stable_hash(city_name)
-            base_lat = 42.1 + (city_hash % 50) / 100.0        
-            base_lon = -72.8 + ((city_hash // 100) % 130) / 100.0   
+            base_lat, base_lon = (42.262, -71.802) # Worcester center fallback for unmapped cities
         
-        # Tightened jitter radius
-        offset_lat = base_lat + ((h % 100) - 50) / 4000.0 
-        offset_lon = base_lon + (((h // 100) % 100) - 50) / 4000.0
+        # Localized Jitter Engine: Keeps regional clusters highly saturated without cross-state wandering
+        offset_lat = base_lat + ((h % 100) - 50) / 1800.0
+        offset_lon = base_lon + (((h // 100) % 100) - 50) / 1800.0
         
         s_lower = str(row['Status']).lower()
         if 'complete' in s_lower: fill_color = "#00E676"
@@ -136,7 +137,7 @@ st_folium(m, width=1000, height=450)
 st.divider()
 st.subheader("Cross-Functional Strategy Matrix")
 
-tab1, tab2, tab3, tab4 = st.tabs(["📊 Executive Insights", "🤝 CX & SLAs", "📐 Design & Eng", "🏛️ DPU Policy"])
+tab1, tab2, tab3, tab4 = st.tabs(["📊 Executive Insights", "🤝 CX & Live SLAs", "📐 Design & Eng", "🏛️ DPU Policy"])
 
 with tab1:
     st.markdown("### High-Level Operational Insights")
