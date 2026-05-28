@@ -62,12 +62,20 @@ status_filter = st.sidebar.multiselect("Project Status (Col M)", all_statuses, d
 battery_filter = st.sidebar.radio("Battery Included", ["All", "Yes", "No"], horizontal=True)
 year_filter = st.sidebar.selectbox("Year Created (Col J)", ["All"] + sorted([y for y in df['Year'].unique() if y > 0], reverse=True))
 
+# THE NEW HIGH EXPOSURE DRILL-DOWN
+exposure_filter = st.sidebar.selectbox("High Exposure Risk", ["All Projects", "> $20,000", "> $30,000", "> $40,000"])
+
 data = df.copy()
 if search: data = data[data.apply(lambda row: search.lower() in str(row).lower(), axis=1)]
 data = data[data['Status'].isin(status_filter)]
 if battery_filter == "Yes": data = data[data['Battery'] == True]
 if battery_filter == "No": data = data[data['Battery'] == False]
 if year_filter != "All": data = data[data['Year'] == year_filter]
+
+# Apply High Exposure Filter
+if exposure_filter == "> $20,000": data = data[data['TU_Cost'] > 20000]
+elif exposure_filter == "> $30,000": data = data[data['TU_Cost'] > 30000]
+elif exposure_filter == "> $40,000": data = data[data['TU_Cost'] > 40000]
 
 # --- KPI METRICS ---
 col1, col2, col3, col4 = st.columns(4)
@@ -106,7 +114,7 @@ if not data.empty:
             base_lat = 42.1 + (city_hash % 50) / 100.0        
             base_lon = -72.8 + ((city_hash // 100) % 130) / 100.0   
         
-        # THE FIX: Drastically tightened jitter radius (divisor is 4000 instead of 800) to keep coastal cities dry
+        # Tightened jitter radius
         offset_lat = base_lat + ((h % 100) - 50) / 4000.0 
         offset_lon = base_lon + (((h // 100) % 100) - 50) / 4000.0
         
@@ -142,13 +150,11 @@ with tab2:
     st.markdown("### Dynamic Utility SLAs")
     st.write("Live Service Level Agreements based on historical performance:")
     
-    # Calculate both SLAs
     sla_df = df.groupby('Utility').agg(
         Avg_CAP_to_Install=('Cycle Time (CAP to Install)', 'mean'),
         Avg_CAP_to_PTO=('Cycle Time (CAP to PTO)', 'mean')
     ).dropna()
     
-    # Format nicely
     sla_df['Avg_CAP_to_Install'] = sla_df['Avg_CAP_to_Install'].round(0).astype(int).astype(str) + " Days"
     sla_df['Avg_CAP_to_PTO'] = sla_df['Avg_CAP_to_PTO'].round(0).astype(int).astype(str) + " Days"
     
@@ -168,6 +174,5 @@ with tab4:
         st.markdown("**Strategic Policy Proposals:**\nAdvocate for **Pro-Rata Cost Sharing** (Depreciation Model) and **Fast-Tracked PCS Integration** to prevent the stranding of clean energy assets.")
     with col_b:
         st.markdown("**The Escalation Trend (Stranded Revenue by Year):**")
-        # Show YoY trend of just the cancelled projects!
         cancelled_trend = cancelled_df[cancelled_df['Year'] > 2020].groupby('Year')['TU_Cost'].sum()
-        st.bar_chart(cancelled_trend, color="#FF3D00") # Red to indicate lost revenue
+        st.bar_chart(cancelled_trend, color="#FF3D00")
