@@ -8,7 +8,7 @@ from streamlit_folium import st_folium
 
 # --- PAGE CONFIG ---
 st.set_page_config(page_title="MA Grid Intelligence", page_icon="⚡", layout="wide")
-st.title("⚡ MA Resilience & Strategy Dashboard")
+st.title("⚡ Regional Resilience & Strategy Dashboard")
 
 # --- DATA ENGINE ---
 @st.cache_data
@@ -88,10 +88,17 @@ st.divider()
 # --- MASSIVE GEOGRAPHIC ENGINE ---
 st.subheader("Interactive Saturation Map")
 st.caption("🟢 Complete | 🟡 Active/Pending | 🔴 Cancelled | 🧿 **Cyan Border = Battery Included**")
-m = folium.Map(location=[42.25, -71.80], zoom_start=8, tiles="CartoDB dark_matter")
 
-# The Master GPS Dictionary (Exhaustive MA Municipalities)
+# Zoomed out slightly to comfortably show VT/NH projects
+m = folium.Map(location=[42.50, -71.80], zoom_start=7, tiles="CartoDB dark_matter")
+
+# The Master GPS Dictionary (Now including VT/NH Extensions)
 ma_coords = {
+    # Out of State Extensions
+    "Bristol": (44.133, -73.078), "Windham": (42.801, -71.304), "Nashua": (42.765, -71.467), 
+    "Bennington": (42.878, -73.196), "Brattleboro": (42.850, -72.557), "Rutland": (43.610, -72.972),
+    
+    # MA Master List
     "Abington": (42.104, -70.945), "Acton": (42.485, -71.432), "Acushnet": (41.679, -70.908), "Adams": (42.624, -73.115),
     "Agawam": (42.069, -72.615), "Alford": (42.234, -73.419), "Amesbury": (42.858, -70.930), "Amherst": (42.380, -72.523),
     "Andover": (42.658, -71.136), "Aquinnah": (41.334, -70.820), "Arlington": (42.415, -71.156), "Ashburnham": (42.635, -71.906),
@@ -187,13 +194,13 @@ def get_stable_hash(s): return int(hashlib.md5(str(s).encode('utf-8')).hexdigest
 def get_mapped_city(city_name, valid_cities):
     if city_name in valid_cities:
         return city_name
-    # AI Typo-Correction Engine (e.g., "S. Hadley" -> "South Hadley")
-    matches = difflib.get_close_matches(city_name, valid_cities, n=1, cutoff=0.6)
+    # TIGHTENED CUTOFF: 0.85 ensures it only catches actual typos (Bostn -> Boston)
+    # and prevents matching entirely different cities (Bristol -> Boston).
+    matches = difflib.get_close_matches(city_name, valid_cities, n=1, cutoff=0.85)
     if matches:
         return matches[0]
     return None
 
-# Locate Unmapped Cities (should be extremely rare now)
 all_cities_in_data = set(data['City'].unique())
 mapped_cities_in_data = {c for c in all_cities_in_data if get_mapped_city(c, ma_coords.keys())}
 missing_cities = sorted(list(all_cities_in_data - mapped_cities_in_data))
@@ -210,19 +217,16 @@ if not data.empty:
         raw_city = row.get('City', 'Unknown')
         h = get_stable_hash(row['Job Code'])
         
-        # Use Typo-Correction Engine to find the city
         matched_city = get_mapped_city(raw_city, ma_coords.keys())
         
         if matched_city:
             base_lat, base_lon = ma_coords[matched_city]
         else:
-            # If completely unmapped, don't stack on Worcester. 
-            # Spread widely and invisibly across Central MA.
             city_hash = get_stable_hash(raw_city)
             base_lat = 42.2 + (city_hash % 40) / 100.0  
             base_lon = -72.5 + ((city_hash // 100) % 90) / 100.0 
         
-        # TIGHT JITTER: Spreads dots safely within the actual city limits (approx 1.5 miles)
+        # TIGHT JITTER: Spreads dots safely within the actual city limits
         offset_lat = base_lat + ((h % 100) - 50) / 3000.0 
         offset_lon = base_lon + (((h // 100) % 100) - 50) / 3000.0
         
