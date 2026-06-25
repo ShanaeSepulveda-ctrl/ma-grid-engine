@@ -39,8 +39,8 @@ def load_and_clean_data():
             df_comp[col] = df_comp[col].apply(lambda x: x if pd.notnull(x) and x >= 0 else np.nan)
             
         df_comp['City'] = df_comp['City'].astype(str).str.title().str.strip()
-        df_comp['Manager'] = df_comp['Manager'].fillna("Unassigned").astype(str)
-        df_comp['Sales_Rep'] = df_comp['Sales_Rep'].fillna("Unknown").astype(str)
+        df_comp['Manager'] = df_comp.get('Manager', pd.Series(dtype=str)).fillna("Unassigned").astype(str)
+        df_comp['Sales_Rep'] = df_comp.get('Sales_Rep', pd.Series(dtype=str)).fillna("Unknown").astype(str)
     except Exception as e:
         df_comp = pd.DataFrame() 
         
@@ -52,10 +52,29 @@ def load_and_clean_data():
             'Project: Service Contract: Service Contract Event: Job Code': 'Job_Code',
             'Project: Service Contract: BrightBox': 'Battery'
         }
-        df_tu = df_tu.rename(columns=rename_tu).dropna(subset=['Job_Code'])
-        df_tu['TU_Cost'] = pd.to_numeric(df_tu['TU_Cost'], errors='coerce').fillna(0)
-        df_tu['Battery'] = df_tu['Battery'].astype(str).str.strip().isin(['1', '1.0', 'True', 'Yes', 'TRUE'])
-        df_tu['City'] = df_tu['City'].astype(str).str.title().str.strip()
+        df_tu = df_tu.rename(columns=rename_tu)
+        
+        # BULLETPROOF SAFETY CHECKS (Prevents Crashes)
+        if 'Job_Code' in df_tu.columns:
+            df_tu = df_tu.dropna(subset=['Job_Code'])
+        else:
+            df_tu['Job_Code'] = "Unknown"
+            
+        if 'TU_Cost' in df_tu.columns:
+            df_tu['TU_Cost'] = pd.to_numeric(df_tu['TU_Cost'], errors='coerce').fillna(0)
+        else:
+            df_tu['TU_Cost'] = 0
+            
+        if 'Battery' in df_tu.columns:
+            df_tu['Battery'] = df_tu['Battery'].astype(str).str.strip().isin(['1', '1.0', 'True', 'Yes', 'TRUE'])
+        else:
+            df_tu['Battery'] = False
+            
+        if 'City' in df_tu.columns:
+            df_tu['City'] = df_tu['City'].astype(str).str.title().str.strip()
+        else:
+            df_tu['City'] = "Unknown"
+            
     except Exception as e:
         df_tu = pd.DataFrame()
 
