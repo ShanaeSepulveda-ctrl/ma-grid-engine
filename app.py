@@ -54,7 +54,7 @@ def load_and_clean_data():
         }
         df_tu = df_tu.rename(columns=rename_tu)
         
-        # BULLETPROOF SAFETY CHECKS (Prevents Crashes)
+        # BULLETPROOF SAFETY CHECKS 
         if 'Job_Code' in df_tu.columns:
             df_tu = df_tu.dropna(subset=['Job_Code'])
         else:
@@ -81,10 +81,6 @@ def load_and_clean_data():
     return df_comp, df_tu
 
 df_comp, df_tu = load_and_clean_data()
-
-# Check if data loaded properly
-if df_tu.empty:
-    st.error("⚠️ Transformer Upgrade data not found. Please ensure 'report1782413270280.csv' is in the folder. The map will be empty without it.")
 
 # --- SIDEBAR: CLEAN SEARCH FILTERS ---
 st.sidebar.header("🎯 Target Your Territory")
@@ -155,10 +151,9 @@ st.divider()
 st.subheader("Interactive Transformer Risk Map")
 st.caption("🔴 High Risk (>$10k) | 🟡 Medium Risk ($5k-$10k) | 🟢 Low Risk (<$5k) | **Cyan Border = Battery Included**")
 
-# The map will ALWAYS render this base, even if data is missing
+# Generating the beautiful map again
 m = folium.Map(location=[42.60, -71.80], zoom_start=7, tiles="CartoDB dark_matter")
 
-# City GPS Dictionary (Major Hubs + Surrounding Logic)
 ma_coords = {
     "Boston": (42.360, -71.058), "Worcester": (42.262, -71.802), "Springfield": (42.101, -72.589),
     "Cambridge": (42.373, -71.109), "Lowell": (42.633, -71.316), "Brockton": (42.083, -71.018),
@@ -213,5 +208,5 @@ if not df_tu.empty:
         
         folium.CircleMarker([offset_lat, offset_lon], radius=5, color=border_color, weight=border_weight, fill=True, fill_color=fill_color, fill_opacity=0.7, tooltip=folium.Tooltip(tooltip_html)).add_to(m)
 
-# Force the map to fill the container properly
-st_folium(m, use_container_width=True, height=500)
+# Restored your original map sizing dimensions so it renders perfectly!
+st_folium(m, width=1000, height=450)
